@@ -30,6 +30,7 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import hu.nn.constant.CSVConstant;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -67,8 +68,9 @@ public class ImportController {
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
             Charset detectedCharset = detectCharset(path, new Metadata());
-            processFileWithSplitter(Files.newInputStream(path), detectedCharset);
-            processFileWithCSVReader(path, detectedCharset);
+            String detectedSeparator = detectSeparator(path, detectedCharset);
+            processFileWithSplitter(Files.newInputStream(path), detectedCharset, detectedSeparator);
+            processFileWithCSVReader(path, detectedCharset, detectedSeparator.charAt(0));
             log.info("Successfull import. originalFileName: {}", originalFileName);
             attributes.addFlashAttribute("success", "Import successfull: " + originalFileName);
         } catch (IOException e) {
@@ -80,6 +82,7 @@ public class ImportController {
     }
 
     private static Charset detectCharset(final Path path, final Metadata metadata) throws IOException {
+        log.info("detectSeparator called.");
         final Charset charset;
 
         String orig = metadata.get(Metadata.CONTENT_ENCODING);
@@ -92,16 +95,30 @@ public class ImportController {
                 final AutoDetectReader detector = new AutoDetectReader(input, metadata)) {
             charset = detector.getCharset();
         } catch (TikaException e) {
-            throw new IOException("Unable to detect charset.", e);
+            throw new IOException("Unable to detect charset: {}", e);
         }
 
         return charset;
     }
 
-    private void processFileWithSplitter(InputStream inputStream, Charset detectedCharset) {
+    private String detectSeparator(Path path, Charset charset) {
+        log.info("detectSeparator called.");
+        try {
+            String content = Files.readString(path, charset);
+            if (content.contains(CSVConstant.SEPARATOR_SEMICOLON)) {
+                return CSVConstant.SEPARATOR_SEMICOLON;
+            } else if (content.contains(CSVConstant.SEPARATOR_PIPE)) {
+                return CSVConstant.SEPARATOR_PIPE;
+            }
+        } catch (IOException e) {
+            log.error("Error during detecting the separator: {}", e);
+        }
+        return "";
+    }
+
+    private void processFileWithSplitter(InputStream inputStream, Charset charset, String separator) {
         log.info("processFileWithSplitter called.");
-        Scanner sc = new Scanner(inputStream, detectedCharset);
-        String separator = "|";
+        Scanner sc = new Scanner(inputStream, charset);
         while (sc.hasNext()) {
             String nextLine = sc.nextLine();
             log.info("nextLine: {}", nextLine);
@@ -110,12 +127,12 @@ public class ImportController {
         }
     }
 
-    private void processFileWithCSVReader(Path path, Charset detectedCharset) {
+    private void processFileWithCSVReader(Path path, Charset charset, char separator) {
         log.info("processFileWithCSVReader called.");
 
         try {
-            CSVParser parser = new CSVParserBuilder().withSeparator('|').build();
-            BufferedReader br = Files.newBufferedReader(path, detectedCharset);
+            CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
+            BufferedReader br = Files.newBufferedReader(path, charset);
             CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
             String[] csvrow = null;
             while ((csvrow = csvReader.readNext()) != null) {
