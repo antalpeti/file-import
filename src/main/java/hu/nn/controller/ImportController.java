@@ -1,9 +1,10 @@
 package hu.nn.controller;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import org.apache.tika.detect.AutoDetectReader;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.google.common.base.Splitter;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +66,9 @@ public class ImportController {
             path = Paths.get(IMPORT_DIR + originalFileName);
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-            processFileWithSplitter(Files.newInputStream(path));
-            processFileWithCSVReader(Files.newInputStream(path));
+            Charset detectedCharset = detectCharset(path, new Metadata());
+            processFileWithSplitter(Files.newInputStream(path), detectedCharset);
+            processFileWithCSVReader(path, detectedCharset);
             log.info("Successfull import. originalFileName: {}", originalFileName);
             attributes.addFlashAttribute("success", "Import successfull: " + originalFileName);
         } catch (IOException e) {
@@ -71,9 +79,28 @@ public class ImportController {
         return "redirect:/";
     }
 
-    private void processFileWithSplitter(InputStream inputStream) {
+    private static Charset detectCharset(final Path path, final Metadata metadata) throws IOException {
+        final Charset charset;
+
+        String orig = metadata.get(Metadata.CONTENT_ENCODING);
+
+        if (null != orig && Charset.isSupported(orig)) {
+            return Charset.forName(orig);
+        }
+
+        try (final InputStream input = new BufferedInputStream(Files.newInputStream(path));
+                final AutoDetectReader detector = new AutoDetectReader(input, metadata)) {
+            charset = detector.getCharset();
+        } catch (TikaException e) {
+            throw new IOException("Unable to detect charset.", e);
+        }
+
+        return charset;
+    }
+
+    private void processFileWithSplitter(InputStream inputStream, Charset detectedCharset) {
         log.info("processFileWithSplitter called.");
-        Scanner sc = new Scanner(inputStream, StandardCharsets.UTF_8.name());
+        Scanner sc = new Scanner(inputStream, detectedCharset);
         String separator = "|";
         while (sc.hasNext()) {
             String nextLine = sc.nextLine();
@@ -83,12 +110,16 @@ public class ImportController {
         }
     }
 
-    private void processFileWithCSVReader(InputStream inputStream) {
+    private void processFileWithCSVReader(Path path, Charset detectedCharset) {
         log.info("processFileWithCSVReader called.");
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8.name()))) {
-            List<String[]> lines = csvReader.readAll();
-            for (String[] line : lines) {
-                log.info("CSV line: {}", Arrays.toString(line));
+
+        try {
+            CSVParser parser = new CSVParserBuilder().withSeparator('|').build();
+            BufferedReader br = Files.newBufferedReader(path, detectedCharset);
+            CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
+            String[] csvrow = null;
+            while ((csvrow = csvReader.readNext()) != null) {
+                log.info(Arrays.toString(csvrow));
             }
         } catch (Exception e) {
             log.error("Error during csv parsing: {}", e);
