@@ -29,23 +29,32 @@ public class ImportController {
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes attributes) {
-        log.info("user.dir:{}", System.getProperty("user.dir"));
-
-        if (file.isEmpty()) {
-            attributes.addFlashAttribute("message", "Please select a file for import.");
+        String userDir = System.getProperty("user.dir");
+        log.info("user.dir:{}", userDir);
+        Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
+        if (!Files.exists(path)) {
+            String pathAsString = path.toString();
+            log.warn("Missing directory. pathAsString: {}", pathAsString);
+            attributes.addFlashAttribute("warning", "Missing directory: " + pathAsString);
+            return "redirect:/";
+        } else if (file.isEmpty()) {
+            String originalFileName = file.getOriginalFilename();
+            log.warn("Empty file. originalFileName: {}", originalFileName);
+            attributes.addFlashAttribute("warning", "Empty file: " + originalFileName);
             return "redirect:/";
         }
 
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         try {
-            Path path = Paths.get(IMPORT_DIR + fileName);
+            path = Paths.get(IMPORT_DIR + originalFileName);
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Successfull import. originalFileName: {}", originalFileName);
+            attributes.addFlashAttribute("success", "Import successfull: " + originalFileName);
         } catch (IOException e) {
-            log.error("Error during file upload {}", e);
+            log.error("Error during import: {}", e);
+            attributes.addFlashAttribute("danger", "Import failed: " + e);
         }
-
-        attributes.addFlashAttribute("message", "You successfully imported " + fileName + '!');
 
         return "redirect:/";
     }
