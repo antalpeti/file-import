@@ -13,8 +13,8 @@ import hu.nn.entity.SurValues;
 @Repository
 public interface SurValuesRepository extends JpaRepository<SurValues, Integer> {
 
-	@Query("from SurValues s where s.id = :id")
-	@QueryHints({ @QueryHint(name = "org.hibernate.cacheable", value = "true") })
-	SurValues getById(@Param("id") Integer id);
+    @Query("from SurValues s where s.id = :id")
+    @QueryHints({ @QueryHint(name = "org.hibernate.cacheable", value = "true") })
+    SurValues getById(@Param("id") Integer id);
 
 }

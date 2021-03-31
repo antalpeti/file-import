@@ -16,16 +16,16 @@ import hu.nn.repository.OutPayHeaderRepository;
 @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
 public class OutPayHeaderService {
 
-	@Autowired
-	private OutPayHeaderRepository outPayHeaderRepository;
+    @Autowired
+    private OutPayHeaderRepository outPayHeaderRepository;
 
-	public OutPayHeaderDTO getByOutpayHeaderId(Integer outpayHeaderId) {
-		return OutPayHeaderMapper.createFrom(outPayHeaderRepository.getByOutpayHeaderId(outpayHeaderId));
-	}
-	
-	public List<OutPayHeaderDTO> findAll() {
-		List<OutPayHeader> entities = outPayHeaderRepository.findAll();
-		return OutPayHeaderMapper.mapEntitiesIntoDTOs(entities);
-	}
+    public OutPayHeaderDTO getByOutpayHeaderId(Integer outpayHeaderId) {
+        return OutPayHeaderMapper.createFrom(outPayHeaderRepository.getByOutpayHeaderId(outpayHeaderId));
+    }
+
+    public List<OutPayHeaderDTO> findAll() {
+        List<OutPayHeader> entities = outPayHeaderRepository.findAll();
+        return OutPayHeaderMapper.mapEntitiesIntoDTOs(entities);
+    }
 
 }

@@ -16,16 +16,16 @@ import hu.nn.repository.SurValuesRepository;
 @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
 public class SurValuesService {
 
-	@Autowired
-	private SurValuesRepository surValuesRepository;
+    @Autowired
+    private SurValuesRepository surValuesRepository;
 
-	public SurValuesDTO getById(Integer id) {
-		return SurValuesMapper.createFrom(surValuesRepository.getById(id));
-	}
-	
-	public List<SurValuesDTO> findAll() {
-		List<SurValues> entities = surValuesRepository.findAll();
-		return SurValuesMapper.mapEntitiesIntoDTOs(entities);
-	}
+    public SurValuesDTO getById(Integer id) {
+        return SurValuesMapper.createFrom(surValuesRepository.getById(id));
+    }
+
+    public List<SurValuesDTO> findAll() {
+        List<SurValues> entities = surValuesRepository.findAll();
+        return SurValuesMapper.mapEntitiesIntoDTOs(entities);
+    }
 
 }

@@ -13,8 +13,8 @@ import hu.nn.entity.OutPayHeader;
 @Repository
 public interface OutPayHeaderRepository extends JpaRepository<OutPayHeader, Integer> {
 
-	@Query("from OutPayHeader o where o.outpayHeaderId = :outpayHeaderId")
-	@QueryHints({ @QueryHint(name = "org.hibernate.cacheable", value = "true") })
-	OutPayHeader getByOutpayHeaderId(@Param("outpayHeaderId") Integer outpayHeaderId);
+    @Query("from OutPayHeader o where o.outpayHeaderId = :outpayHeaderId")
+    @QueryHints({ @QueryHint(name = "org.hibernate.cacheable", value = "true") })
+    OutPayHeader getByOutpayHeaderId(@Param("outpayHeaderId") Integer outpayHeaderId);
 
 }

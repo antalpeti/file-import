@@ -12,18 +12,19 @@ import lombok.ToString;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 @ToString
 @EqualsAndHashCode
 public class SurValuesDTO implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private Integer id;
-	private String chdrnum;
-	private BigDecimal survalue;
-	private String company;
-	private String currency;
-	private String validDate;
+    private Integer id;
+    private String chdrnum;
+    private BigDecimal survalue;
+    private String company;
+    private String currency;
+    private String validDate;
 
 }
