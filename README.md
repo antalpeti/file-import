@@ -1,2 +1,2 @@
-# file-export-import
-Exchange data between txt and sql table.
+# file-import
+Import data from txt to sql table.

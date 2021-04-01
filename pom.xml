@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>hu.nn</groupId>
-	<artifactId>file-export-import</artifactId>
+	<artifactId>file-import</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>file-export-import</name>
-	<description>Exchange data between txt and sql table.</description>
+	<name>file-import</name>
+	<description>Import data from txt to sql table.</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>

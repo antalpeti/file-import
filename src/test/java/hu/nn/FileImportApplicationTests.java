@@ -1,10 +1,10 @@
-package hu.nn.fileexportimport;
+package hu.nn;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FileExportImportApplicationTests {
+class FileImportApplicationTests {
 
 	@Test
 	void contextLoads() {
