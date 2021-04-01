@@ -15,7 +15,6 @@ import java.util.Scanner;
 
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +66,7 @@ public class ImportController {
             path = Paths.get(IMPORT_DIR + originalFileName);
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-            Charset detectedCharset = detectCharset(path, new Metadata());
+            Charset detectedCharset = detectCharset(path);
             String detectedSeparator = detectSeparator(path, detectedCharset);
             processFileWithSplitter(Files.newInputStream(path), detectedCharset, detectedSeparator);
             processFileWithCSVReader(path, detectedCharset, detectedSeparator.charAt(0));
@@ -81,18 +80,11 @@ public class ImportController {
         return "redirect:/";
     }
 
-    private static Charset detectCharset(final Path path, final Metadata metadata) throws IOException {
+    private static Charset detectCharset(final Path path) throws IOException {
         log.info("detectSeparator called.");
         final Charset charset;
 
-        String orig = metadata.get(Metadata.CONTENT_ENCODING);
-
-        if (null != orig && Charset.isSupported(orig)) {
-            return Charset.forName(orig);
-        }
-
-        try (final InputStream input = new BufferedInputStream(Files.newInputStream(path));
-                final AutoDetectReader detector = new AutoDetectReader(input, metadata)) {
+        try (final InputStream input = new BufferedInputStream(Files.newInputStream(path)); final AutoDetectReader detector = new AutoDetectReader(input)) {
             charset = detector.getCharset();
         } catch (TikaException e) {
             throw new IOException("Unable to detect charset: {}", e);
