@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
 import org.springframework.stereotype.Controller;
@@ -41,6 +43,9 @@ public class ImportController {
 
     private static final String IMPORT_DIR = "./uploads/";
     private static final String REDIRECT = "redirect:/";
+    private static final String SUCCESS = "success";
+    private static final String WARNING = "warning";
+    private static final String DANGER = "danger";
 
     @GetMapping("/")
     public String homepage() {
@@ -53,37 +58,47 @@ public class ImportController {
         String userDir = System.getProperty("user.dir");
         log.info("user.dir:{}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
-        boolean fileProcessEnabled = true;
         String originalFileName = file.getOriginalFilename();
-        if (!Files.exists(path)) {
-            String pathAsString = path.toString();
-            log.warn("Missing directory. pathAsString: {}", pathAsString);
-            attributes.addFlashAttribute("warning", "Missing directory: " + pathAsString);
-            fileProcessEnabled = false;
-        } else if (file.isEmpty()) {
-            log.warn("Empty file. originalFileName: {}", originalFileName);
-            attributes.addFlashAttribute("warning", "Empty file: " + originalFileName);
-            fileProcessEnabled = false;
-        }
+        String contentType = file.getContentType();
+        boolean fileProcessEnabled = true;
+        fileProcessEnabled = isValidFile(file, attributes, path, originalFileName, contentType, fileProcessEnabled);
 
         if (fileProcessEnabled && originalFileName != null) {
-            String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
-
             try {
+                String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
                 path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 Charset detectedCharset = detectCharset(path);
                 String detectedSeparator = detectSeparator(path, detectedCharset);
                 processFile(path, detectedCharset, detectedSeparator);
                 log.info("Successfull import. originalFileName: {}", cleanedOriginalFileName);
-                attributes.addFlashAttribute("success", "Import successfull: " + cleanedOriginalFileName);
-            } catch (IOException e) {
-                log.error("Error in uploadFile: {}", e);
-                attributes.addFlashAttribute("danger", "Import failed: " + e);
+                attributes.addFlashAttribute(SUCCESS, "Import successfull: " + cleanedOriginalFileName);
+            } catch (Exception e) {
+                log.error("Error in uploadFile during file processing: {}", e);
+                attributes.addFlashAttribute(DANGER, "Import failed: " + e);
             }
         }
 
         return REDIRECT;
+    }
+
+    private boolean isValidFile(MultipartFile file, RedirectAttributes attributes, Path path, String originalFileName, String contentType,
+            boolean fileProcessEnabled) {
+        if (!Files.exists(path)) {
+            String pathAsString = path.toString();
+            log.warn("Missing directory. pathAsString: {}", pathAsString);
+            attributes.addFlashAttribute(WARNING, "Missing directory: " + pathAsString);
+            fileProcessEnabled = false;
+        } else if (file.isEmpty()) {
+            log.warn("Empty file. originalFileName: {}", originalFileName);
+            attributes.addFlashAttribute(WARNING, "Empty file: " + originalFileName);
+            fileProcessEnabled = false;
+        } else if (!MediaType.TEXT_PLAIN.equals(contentType)) {
+            log.warn("Not plain text file. contentType: {}", contentType);
+            fileProcessEnabled = false;
+            attributes.addFlashAttribute(WARNING, "Not plain text file: " + contentType);
+        }
+        return fileProcessEnabled;
     }
 
     private static Charset detectCharset(final Path path) throws IOException {
@@ -110,7 +125,7 @@ public class ImportController {
             } else if (content.contains(CSVConstant.SEPARATOR_PIPE)) {
                 separator = CSVConstant.SEPARATOR_PIPE;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Error in detectSeparator: {}", e);
         }
         log.info("Detected separator. separator:{}", separator);
@@ -126,7 +141,7 @@ public class ImportController {
                 List<String> splitedLine = Splitter.on(separator).splitToList(line);
                 log.info("splitedLine: {}", splitedLine);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Error in processFileWithSplitter: {}", e);
         }
     }
