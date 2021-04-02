@@ -1,8 +1,11 @@
 package hu.nn.constant;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class CSVConstant {
 
-    public final static String SEPARATOR_SEMICOLON = ";";
-    public final static String SEPARATOR_PIPE = "|";
+    public static final String SEPARATOR_SEMICOLON = ";";
+    public static final String SEPARATOR_PIPE = "|";
 
 }

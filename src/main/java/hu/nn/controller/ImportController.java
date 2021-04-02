@@ -51,31 +51,34 @@ public class ImportController {
         String userDir = System.getProperty("user.dir");
         log.info("user.dir:{}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
+        boolean fileProcessEnabled = true;
+        String originalFileName = file.getOriginalFilename();
         if (!Files.exists(path)) {
             String pathAsString = path.toString();
             log.warn("Missing directory. pathAsString: {}", pathAsString);
             attributes.addFlashAttribute("warning", "Missing directory: " + pathAsString);
-            return REDIRECT;
+            fileProcessEnabled = false;
         } else if (file.isEmpty()) {
-            String originalFileName = file.getOriginalFilename();
             log.warn("Empty file. originalFileName: {}", originalFileName);
             attributes.addFlashAttribute("warning", "Empty file: " + originalFileName);
-            return REDIRECT;
+            fileProcessEnabled = false;
         }
 
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        if (fileProcessEnabled && originalFileName != null) {
+            String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
 
-        try {
-            path = Paths.get(IMPORT_DIR + originalFileName);
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-            Charset detectedCharset = detectCharset(path);
-            String detectedSeparator = detectSeparator(path, detectedCharset);
-            processFile(path, detectedCharset, detectedSeparator);
-            log.info("Successfull import. originalFileName: {}", originalFileName);
-            attributes.addFlashAttribute("success", "Import successfull: " + originalFileName);
-        } catch (IOException e) {
-            log.error("Error in uploadFile: {}", e);
-            attributes.addFlashAttribute("danger", "Import failed: " + e);
+            try {
+                path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                Charset detectedCharset = detectCharset(path);
+                String detectedSeparator = detectSeparator(path, detectedCharset);
+                processFile(path, detectedCharset, detectedSeparator);
+                log.info("Successfull import. originalFileName: {}", cleanedOriginalFileName);
+                attributes.addFlashAttribute("success", "Import successfull: " + cleanedOriginalFileName);
+            } catch (IOException e) {
+                log.error("Error in uploadFile: {}", e);
+                attributes.addFlashAttribute("danger", "Import failed: " + e);
+            }
         }
 
         return REDIRECT;
