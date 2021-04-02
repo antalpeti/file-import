@@ -1,5 +1,6 @@
 package hu.nn.mapper;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.stream.Collectors;
 
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.entity.OutPayHeader;
+import hu.nn.util.DateUtil;
+import hu.nn.util.NumberUtil;
 import hu.nn.util.Util;
 import lombok.experimental.UtilityClass;
 
@@ -79,6 +82,38 @@ public class OutPayHeaderMapper {
             entity.setTp2processDate(dto.getTp2processDate());
         }
         return entity;
+    }
+
+    public static OutPayHeaderDTO updateDTO(final OutPayHeaderDTO dto, final String[] csvRow) {
+        if (Util.isNotEmpty(dto) && Util.isNotEmpty(csvRow)) {
+            int i = 0;
+            dto.setClntnum(getElement(csvRow, i++));
+            dto.setChdrnum(getElement(csvRow, i++));
+            dto.setLetterType(getElement(csvRow, i++));
+            dto.setPrintDate(DateUtil.parseDate(getElement(csvRow, i++)));
+            dto.setDataId(getElement(csvRow, i++));
+            dto.setClntName(getElement(csvRow, i++));
+            dto.setClntAddress(getElement(csvRow, i++));
+            dto.setRegDate(DateUtil.parseDate(getElement(csvRow, i++)));
+            dto.setBenPercent(NumberUtil.parseNumber(getElement(csvRow, i++), BigDecimal.class));
+            dto.setRole1(getElement(csvRow, i++));
+            dto.setRole2(getElement(csvRow, i++));
+            dto.setCownNum(getElement(csvRow, i++));
+            dto.setCownName(getElement(csvRow, i++));
+            dto.setNotice01(getElement(csvRow, i++));
+            dto.setNotice02(getElement(csvRow, i++));
+            dto.setNotice03(getElement(csvRow, i++));
+            dto.setNotice04(getElement(csvRow, i++));
+            dto.setNotice05(getElement(csvRow, i++));
+            dto.setNotice06(getElement(csvRow, i++));
+            dto.setClaimId(getElement(csvRow, i++));
+            dto.setTp2processDate(DateUtil.parseDate(getElement(csvRow, i)));
+        }
+        return dto;
+    }
+
+    private static String getElement(final String[] csvRow, int index) {
+        return csvRow.length > index + 1 ? csvRow[index] : null;
     }
 
     public static List<OutPayHeaderDTO> mapEntitiesIntoDTOs(final List<OutPayHeader> entities) {

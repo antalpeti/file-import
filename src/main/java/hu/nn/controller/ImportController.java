@@ -31,6 +31,8 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import hu.nn.constant.CSVConstant;
+import hu.nn.dto.OutPayHeaderDTO;
+import hu.nn.mapper.OutPayHeaderMapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -129,23 +131,22 @@ public class ImportController {
         }
     }
 
-    private List<String> processFileWithCSVReader(Path path, Charset charset, char separator) {
+    private List<String[]> processFileWithCSVReader(Path path, Charset charset, char separator) {
         log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {} ", path, charset, separator);
-        List<String> processedRows = new ArrayList<>();
+        List<String[]> csvRows = new ArrayList<>();
         try {
             CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
             BufferedReader br = Files.newBufferedReader(path, charset);
             CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
-            String[] csvrow = null;
-            while ((csvrow = csvReader.readNext()) != null) {
-                String processedRow = Arrays.toString(csvrow);
-                processedRows.add(processedRow);
-                log.info("Processed line: {}", processedRow);
+            String[] csvRow = null;
+            while ((csvRow = csvReader.readNext()) != null) {
+                csvRows.add(csvRow);
+                log.info("Processed row: {}", Arrays.toString(csvRow));
             }
         } catch (Exception e) {
             log.error("Error in processFileWithCSVReader: {}", e);
         }
-        return processedRows;
+        return csvRows;
     }
 
     private void processFile(Path path, Charset charset, String separator) {
@@ -161,6 +162,13 @@ public class ImportController {
 
     private void processFileForOutPayHeader(Path path, Charset charset) {
         log.info("processFileForOutPayHeader called. path: {}, charset: {}", path, charset);
-        List<String> processedList = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
+        List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
+        for (String[] csvRow : csvRows) {
+            OutPayHeaderDTO dto = new OutPayHeaderDTO();
+            OutPayHeaderMapper.updateDTO(dto, csvRow);
+            log.info("After csvRow to dto mapping. dto: {}", dto);
+        }
+
     }
+
 }
