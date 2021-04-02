@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -36,7 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 public class ImportController {
 
-    private final String IMPORT_DIR = "./uploads/";
+    private static final String IMPORT_DIR = "./uploads/";
+    private static final String REDIRECT = "redirect:/";
 
     @GetMapping("/")
     public String homepage() {
@@ -45,6 +47,7 @@ public class ImportController {
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes attributes) {
+        log.info("uploadFile called.");
         String userDir = System.getProperty("user.dir");
         log.info("user.dir:{}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
@@ -52,12 +55,12 @@ public class ImportController {
             String pathAsString = path.toString();
             log.warn("Missing directory. pathAsString: {}", pathAsString);
             attributes.addFlashAttribute("warning", "Missing directory: " + pathAsString);
-            return "redirect:/";
+            return REDIRECT;
         } else if (file.isEmpty()) {
             String originalFileName = file.getOriginalFilename();
             log.warn("Empty file. originalFileName: {}", originalFileName);
             attributes.addFlashAttribute("warning", "Empty file: " + originalFileName);
-            return "redirect:/";
+            return REDIRECT;
         }
 
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -65,29 +68,27 @@ public class ImportController {
         try {
             path = Paths.get(IMPORT_DIR + originalFileName);
             Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
             Charset detectedCharset = detectCharset(path);
             String detectedSeparator = detectSeparator(path, detectedCharset);
-            processFileWithSplitter(Files.newInputStream(path), detectedCharset, detectedSeparator);
-            processFileWithCSVReader(path, detectedCharset, detectedSeparator.charAt(0));
+            processFile(path, detectedCharset, detectedSeparator);
             log.info("Successfull import. originalFileName: {}", originalFileName);
             attributes.addFlashAttribute("success", "Import successfull: " + originalFileName);
         } catch (IOException e) {
-            log.error("Error during import: {}", e);
+            log.error("Error in uploadFile: {}", e);
             attributes.addFlashAttribute("danger", "Import failed: " + e);
         }
 
-        return "redirect:/";
+        return REDIRECT;
     }
 
     private static Charset detectCharset(final Path path) throws IOException {
-        log.info("detectSeparator called.");
+        log.info("detectCharset called. path: {}", path);
         final Charset charset;
 
         try (final InputStream input = new BufferedInputStream(Files.newInputStream(path)); final AutoDetectReader detector = new AutoDetectReader(input)) {
             charset = detector.getCharset();
         } catch (TikaException e) {
-            throw new IOException("Error during charset detection: {}", e);
+            throw new IOException("Error in detectCharset: {}", e);
         }
 
         log.info("Detected charset. charset: {}", charset);
@@ -95,7 +96,7 @@ public class ImportController {
     }
 
     private String detectSeparator(Path path, Charset charset) {
-        log.info("detectSeparator called.");
+        log.info("detectSeparator called. path: {}, charset: {}", path, charset);
         String separator = "";
         try {
             String content = Files.readString(path, charset);
@@ -105,37 +106,58 @@ public class ImportController {
                 separator = CSVConstant.SEPARATOR_PIPE;
             }
         } catch (IOException e) {
-            log.error("Error during separator detection: {}", e);
+            log.error("Error in detectSeparator: {}", e);
         }
         log.info("Detected separator. separator:{}", separator);
         return separator;
     }
 
-    private void processFileWithSplitter(InputStream inputStream, Charset charset, String separator) {
-        log.info("processFileWithSplitter called.");
-        try (Scanner sc = new Scanner(inputStream, charset)) {
+    private void processFileWithSplitter(Path path, Charset charset, String separator) {
+        log.info("processFileWithSplitter called. path: {}, charset: {}, separator: {}", path, charset, separator);
+        try (Scanner sc = new Scanner(Files.newInputStream(path), charset)) {
             while (sc.hasNext()) {
                 String line = sc.nextLine();
                 log.info("nextLine: {}", line);
                 List<String> splitedLine = Splitter.on(separator).splitToList(line);
                 log.info("splitedLine: {}", splitedLine);
             }
+        } catch (IOException e) {
+            log.error("Error in processFileWithSplitter: {}", e);
         }
     }
 
-    private void processFileWithCSVReader(Path path, Charset charset, char separator) {
-        log.info("processFileWithCSVReader called.");
+    private List<String> processFileWithCSVReader(Path path, Charset charset, char separator) {
+        log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {} ", path, charset, separator);
+        List<String> processedRows = new ArrayList<>();
         try {
             CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
             BufferedReader br = Files.newBufferedReader(path, charset);
             CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
             String[] csvrow = null;
             while ((csvrow = csvReader.readNext()) != null) {
-                log.info("Processed line: {}", Arrays.toString(csvrow));
+                String processedRow = Arrays.toString(csvrow);
+                processedRows.add(processedRow);
+                log.info("Processed line: {}", processedRow);
             }
         } catch (Exception e) {
-            log.error("Error during csv parsing: {}", e);
+            log.error("Error in processFileWithCSVReader: {}", e);
+        }
+        return processedRows;
+    }
+
+    private void processFile(Path path, Charset charset, String separator) {
+        log.info("processFile called. path: {}, charset: {}, separator: {}", path, charset, separator);
+        switch (separator) {
+        case CSVConstant.SEPARATOR_SEMICOLON:
+            processFileForOutPayHeader(path, charset);
+            break;
+        default:
+            break;
         }
     }
 
+    private void processFileForOutPayHeader(Path path, Charset charset) {
+        log.info("processFileForOutPayHeader called. path: {}, charset: {}", path, charset);
+        List<String> processedList = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
+    }
 }
