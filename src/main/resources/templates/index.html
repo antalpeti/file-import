@@ -21,6 +21,13 @@
 						</div>
 						<button type="submit" class="btn btn-primary">Import</button>
 					</form>
+					<br/>
+					<div th:if="${!#strings.isEmpty(unsavedRowsContent)}">
+						<h3 class="text-danger">Rows that cannot be saved</h3>
+						<div>
+							<textarea class="form-control" rows="10" style="margin-top: 10px;" placeholder="" name="notes" th:inline="text">[[${unsavedRowsContent}]]</textarea>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

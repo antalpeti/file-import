@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,17 +36,23 @@ import com.opencsv.CSVReaderBuilder;
 import hu.nn.constant.CSVConstant;
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.mapper.OutPayHeaderMapper;
+import hu.nn.service.OutPayHeaderService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
 public class ImportController {
 
+    @Autowired
+    private OutPayHeaderService outPayHeaderService;
+
     private static final String IMPORT_DIR = "./uploads/";
     private static final String REDIRECT = "redirect:/";
     private static final String SUCCESS = "success";
     private static final String WARNING = "warning";
     private static final String DANGER = "danger";
+
+    private RedirectAttributes redirectAttributes;
 
     @GetMapping("/")
     public String homepage() {
@@ -55,13 +62,14 @@ public class ImportController {
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes attributes) {
         log.info("uploadFile called.");
+        redirectAttributes = attributes;
         String userDir = System.getProperty("user.dir");
         log.info("user.dir:{}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
         String originalFileName = file.getOriginalFilename();
         String contentType = file.getContentType();
         boolean fileProcessEnabled = true;
-        fileProcessEnabled = isValidFile(file, attributes, path, originalFileName, contentType, fileProcessEnabled);
+        fileProcessEnabled = isValidFile(file, path, originalFileName, contentType, fileProcessEnabled);
 
         if (fileProcessEnabled && originalFileName != null) {
             try {
@@ -72,33 +80,44 @@ public class ImportController {
                 String detectedSeparator = detectSeparator(path, detectedCharset);
                 processFile(path, detectedCharset, detectedSeparator);
                 log.info("Successfull import. originalFileName: {}", cleanedOriginalFileName);
-                attributes.addFlashAttribute(SUCCESS, "Import successfull: " + cleanedOriginalFileName);
+                addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
             } catch (Exception e) {
                 log.error("Error in uploadFile during file processing: {}", e);
-                attributes.addFlashAttribute(DANGER, "Import failed: " + e);
+                addErrorMessage("Import failed: " + e);
             }
         }
 
         return REDIRECT;
     }
 
-    private boolean isValidFile(MultipartFile file, RedirectAttributes attributes, Path path, String originalFileName, String contentType,
-            boolean fileProcessEnabled) {
+    private void addSuccessMessage(String message) {
+        redirectAttributes.addFlashAttribute(SUCCESS, message);
+    }
+
+    private void addErrorMessage(String message) {
+        redirectAttributes.addFlashAttribute(DANGER, message);
+    }
+
+    private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType, boolean fileProcessEnabled) {
         if (!Files.exists(path)) {
             String pathAsString = path.toString();
             log.warn("Missing directory. pathAsString: {}", pathAsString);
-            attributes.addFlashAttribute(WARNING, "Missing directory: " + pathAsString);
+            addWarningMessage("Missing directory: " + pathAsString);
             fileProcessEnabled = false;
         } else if (file.isEmpty()) {
             log.warn("Empty file. originalFileName: {}", originalFileName);
-            attributes.addFlashAttribute(WARNING, "Empty file: " + originalFileName);
+            addWarningMessage("Empty file: " + originalFileName);
             fileProcessEnabled = false;
         } else if (!MediaType.TEXT_PLAIN.equals(contentType)) {
             log.warn("Not plain text file. contentType: {}", contentType);
             fileProcessEnabled = false;
-            attributes.addFlashAttribute(WARNING, "Not plain text file: " + contentType);
+            addWarningMessage("Not plain text file: " + contentType);
         }
         return fileProcessEnabled;
+    }
+
+    private void addWarningMessage(String message) {
+        redirectAttributes.addFlashAttribute(WARNING, message);
     }
 
     private static Charset detectCharset(final Path path) throws IOException {
@@ -178,12 +197,37 @@ public class ImportController {
     private void processFileForOutPayHeader(Path path, Charset charset) {
         log.info("processFileForOutPayHeader called. path: {}, charset: {}", path, charset);
         List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
-        for (String[] csvRow : csvRows) {
-            OutPayHeaderDTO dto = new OutPayHeaderDTO();
-            OutPayHeaderMapper.updateDTO(dto, csvRow);
-            log.info("After csvRow to dto mapping. dto: {}", dto);
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (String[] csvRow : csvRows) {
+                OutPayHeaderDTO dto = new OutPayHeaderDTO();
+                OutPayHeaderMapper.updateDTO(dto, csvRow);
+                log.info("After csvRow to dto mapping. dto: {}", dto);
+                boolean saved = saveOutPayHeader(dto);
+                if (!saved) {
+                    sb.append(StringUtils.arrayToDelimitedString(csvRow, CSVConstant.SEPARATOR_SEMICOLON));
+                    sb.append("\n");
+                }
+            }
+            if (!sb.isEmpty()) {
+                sb.deleteCharAt(sb.length() - 1);
+                redirectAttributes.addFlashAttribute("unsavedRowsContent", sb.toString());
+            }
+        } catch (Exception e) {
+            log.error("Error in processFileForOutPayHeader: {}", e);
+            addErrorMessage("Import failed: " + e);
         }
+    }
 
+    private boolean saveOutPayHeader(OutPayHeaderDTO dto) {
+        boolean saved = true;
+        try {
+            outPayHeaderService.save(dto);
+        } catch (Exception e) {
+            saved = false;
+            log.error("Error in saveOutPayHeader: {}", e);
+        }
+        return saved;
     }
 
 }
