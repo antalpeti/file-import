@@ -87,48 +87,51 @@ public class ImportController {
         try (final InputStream input = new BufferedInputStream(Files.newInputStream(path)); final AutoDetectReader detector = new AutoDetectReader(input)) {
             charset = detector.getCharset();
         } catch (TikaException e) {
-            throw new IOException("Unable to detect charset: {}", e);
+            throw new IOException("Error during charset detection: {}", e);
         }
 
+        log.info("Detected charset. charset: {}", charset);
         return charset;
     }
 
     private String detectSeparator(Path path, Charset charset) {
         log.info("detectSeparator called.");
+        String separator = "";
         try {
             String content = Files.readString(path, charset);
             if (content.contains(CSVConstant.SEPARATOR_SEMICOLON)) {
-                return CSVConstant.SEPARATOR_SEMICOLON;
+                separator = CSVConstant.SEPARATOR_SEMICOLON;
             } else if (content.contains(CSVConstant.SEPARATOR_PIPE)) {
-                return CSVConstant.SEPARATOR_PIPE;
+                separator = CSVConstant.SEPARATOR_PIPE;
             }
         } catch (IOException e) {
-            log.error("Error during detecting the separator: {}", e);
+            log.error("Error during separator detection: {}", e);
         }
-        return "";
+        log.info("Detected separator. separator:{}", separator);
+        return separator;
     }
 
     private void processFileWithSplitter(InputStream inputStream, Charset charset, String separator) {
         log.info("processFileWithSplitter called.");
-        Scanner sc = new Scanner(inputStream, charset);
-        while (sc.hasNext()) {
-            String nextLine = sc.nextLine();
-            log.info("nextLine: {}", nextLine);
-            List<String> splitToList = Splitter.on(separator).splitToList(nextLine);
-            log.info("splitToList: {}", splitToList);
+        try (Scanner sc = new Scanner(inputStream, charset)) {
+            while (sc.hasNext()) {
+                String line = sc.nextLine();
+                log.info("nextLine: {}", line);
+                List<String> splitedLine = Splitter.on(separator).splitToList(line);
+                log.info("splitedLine: {}", splitedLine);
+            }
         }
     }
 
     private void processFileWithCSVReader(Path path, Charset charset, char separator) {
         log.info("processFileWithCSVReader called.");
-
         try {
             CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
             BufferedReader br = Files.newBufferedReader(path, charset);
             CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
             String[] csvrow = null;
             while ((csvrow = csvReader.readNext()) != null) {
-                log.info(Arrays.toString(csvrow));
+                log.info("Processed line: {}", Arrays.toString(csvrow));
             }
         } catch (Exception e) {
             log.error("Error during csv parsing: {}", e);
