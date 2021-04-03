@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import hu.nn.dto.PolicyDTO;
 import hu.nn.entity.Policy;
-import hu.nn.util.CsvUtil;
+import hu.nn.util.CSVUtil;
 import hu.nn.util.Util;
 import lombok.experimental.UtilityClass;
 
@@ -44,14 +44,14 @@ public class PolicyMapper {
     public static PolicyDTO updateDTO(final PolicyDTO dto, final String[] csvRow) {
         if (Util.isNotEmpty(dto) && Util.isNotEmpty(csvRow)) {
             int i = 0;
-            dto.setChdrnum(CsvUtil.getElement(csvRow, i++));
-            dto.setCownnum(CsvUtil.getElement(csvRow, i++));
-            dto.setOwnerName(CsvUtil.getElement(csvRow, i++));
-            dto.setLifcNum(CsvUtil.getElement(csvRow, i++));
-            dto.setLifcName(CsvUtil.getElement(csvRow, i++));
-            dto.setAracde(CsvUtil.getElement(csvRow, i++));
-            dto.setAgntnum(CsvUtil.getElement(csvRow, i++));
-            dto.setMailAddress(CsvUtil.getElement(csvRow, i));
+            dto.setChdrnum(CSVUtil.getElement(csvRow, i++));
+            dto.setCownnum(CSVUtil.getElement(csvRow, i++));
+            dto.setOwnerName(CSVUtil.getElement(csvRow, i++));
+            dto.setLifcNum(CSVUtil.getElement(csvRow, i++));
+            dto.setLifcName(CSVUtil.getElement(csvRow, i++));
+            dto.setAracde(CSVUtil.getElement(csvRow, i++));
+            dto.setAgntnum(CSVUtil.getElement(csvRow, i++));
+            dto.setMailAddress(CSVUtil.getElement(csvRow, i));
         }
         return dto;
     }

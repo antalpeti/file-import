@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.entity.OutPayHeader;
-import hu.nn.util.CsvUtil;
+import hu.nn.util.CSVUtil;
 import hu.nn.util.DateUtil;
 import hu.nn.util.NumberUtil;
 import hu.nn.util.Util;
@@ -60,27 +60,27 @@ public class OutPayHeaderMapper {
     public static OutPayHeaderDTO updateDTO(final OutPayHeaderDTO dto, final String[] csvRow) {
         if (Util.isNotEmpty(dto) && Util.isNotEmpty(csvRow)) {
             int i = 0;
-            dto.setClntnum(CsvUtil.getElement(csvRow, i++));
-            dto.setChdrnum(CsvUtil.getElement(csvRow, i++));
-            dto.setLetterType(CsvUtil.getElement(csvRow, i++));
-            dto.setPrintDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i++)));
-            dto.setDataId(CsvUtil.getElement(csvRow, i++));
-            dto.setClntName(CsvUtil.getElement(csvRow, i++));
-            dto.setClntAddress(CsvUtil.getElement(csvRow, i++));
-            dto.setRegDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i++)));
-            dto.setBenPercent(NumberUtil.parseNumber(CsvUtil.getElement(csvRow, i++), BigDecimal.class));
-            dto.setRole1(CsvUtil.getElement(csvRow, i++));
-            dto.setRole2(CsvUtil.getElement(csvRow, i++));
-            dto.setCownNum(CsvUtil.getElement(csvRow, i++));
-            dto.setCownName(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice01(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice02(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice03(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice04(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice05(CsvUtil.getElement(csvRow, i++));
-            dto.setNotice06(CsvUtil.getElement(csvRow, i++));
-            dto.setClaimId(CsvUtil.getElement(csvRow, i++));
-            dto.setTp2processDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i)));
+            dto.setClntnum(CSVUtil.getElement(csvRow, i++));
+            dto.setChdrnum(CSVUtil.getElement(csvRow, i++));
+            dto.setLetterType(CSVUtil.getElement(csvRow, i++));
+            dto.setPrintDate(DateUtil.parseDate(CSVUtil.getElement(csvRow, i++)));
+            dto.setDataId(CSVUtil.getElement(csvRow, i++));
+            dto.setClntName(CSVUtil.getElement(csvRow, i++));
+            dto.setClntAddress(CSVUtil.getElement(csvRow, i++));
+            dto.setRegDate(DateUtil.parseDate(CSVUtil.getElement(csvRow, i++)));
+            dto.setBenPercent(NumberUtil.parseNumber(CSVUtil.getElement(csvRow, i++), BigDecimal.class));
+            dto.setRole1(CSVUtil.getElement(csvRow, i++));
+            dto.setRole2(CSVUtil.getElement(csvRow, i++));
+            dto.setCownNum(CSVUtil.getElement(csvRow, i++));
+            dto.setCownName(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice01(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice02(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice03(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice04(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice05(CSVUtil.getElement(csvRow, i++));
+            dto.setNotice06(CSVUtil.getElement(csvRow, i++));
+            dto.setClaimId(CSVUtil.getElement(csvRow, i++));
+            dto.setTp2processDate(DateUtil.parseDate(CSVUtil.getElement(csvRow, i)));
         }
         return dto;
     }
