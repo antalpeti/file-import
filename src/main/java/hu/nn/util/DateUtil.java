@@ -15,6 +15,7 @@ public class DateUtil {
     private static final String[] DATE_PATTERNS = { DATE_PATTERN_8_HU };
 
     public static Date parseDate(String value) {
+        log.info("parseDate called. value: {}", value);
         if (value == null || value.length() == 0) {
             return null;
         }
@@ -23,7 +24,7 @@ public class DateUtil {
         try {
             convertedValue = DateUtils.parseDate(value, DATE_PATTERNS);
         } catch (Exception e) {
-            log.error("Error in DateUtil.parseDate: {}", e);
+            log.error("Error in parseDate: {}", e);
         }
         return convertedValue;
     }

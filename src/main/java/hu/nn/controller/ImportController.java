@@ -40,6 +40,7 @@ import hu.nn.mapper.OutPayHeaderMapper;
 import hu.nn.mapper.PolicyMapper;
 import hu.nn.service.OutPayHeaderService;
 import hu.nn.service.PolicyService;
+import hu.nn.util.CSVUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -61,8 +62,6 @@ public class ImportController {
 
     private RedirectAttributes redirectAttributes;
 
-    private String cleanedOriginalFileName;
-
     @GetMapping("/")
     public String homepage() {
         return "index";
@@ -73,7 +72,7 @@ public class ImportController {
         log.info("uploadFile called.");
         redirectAttributes = attributes;
         String userDir = System.getProperty("user.dir");
-        log.info("user.dir:{}", userDir);
+        log.info("Located user directory. userDir: {}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
         String originalFileName = file.getOriginalFilename();
         String contentType = file.getContentType();
@@ -82,7 +81,7 @@ public class ImportController {
 
         if (fileProcessEnabled && originalFileName != null) {
             try {
-                cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
+                String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
                 path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 Charset detectedCharset = detectCharset(path);
@@ -159,7 +158,7 @@ public class ImportController {
         } catch (Exception e) {
             log.error("Error in detectSeparator: {}", e);
         }
-        log.info("Detected separator. separator:{}", separator);
+        log.info("Detected separator. separator: {}", separator);
         return separator;
     }
 
@@ -178,7 +177,7 @@ public class ImportController {
     }
 
     private List<String[]> processFileWithCSVReader(Path path, Charset charset, char separator) {
-        log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {} ", path, charset, separator);
+        log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {}", path, charset, separator);
         List<String[]> csvRows = new ArrayList<>();
         try {
             CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
@@ -186,8 +185,11 @@ public class ImportController {
             CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
             String[] csvRow = null;
             while ((csvRow = csvReader.readNext()) != null) {
+                log.info("Processed row. Arrays.asList(csvRow): {}", Arrays.asList(csvRow));
+                if (CSVUtil.isEmpty(csvRow)) {
+                    continue;
+                }
                 csvRows.add(csvRow);
-                log.info("Processed row: {}", Arrays.toString(csvRow));
             }
         } catch (Exception e) {
             log.error("Error in processFileWithCSVReader: {}", e);
