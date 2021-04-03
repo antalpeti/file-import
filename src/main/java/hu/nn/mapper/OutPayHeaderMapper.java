@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.entity.OutPayHeader;
+import hu.nn.util.CsvUtil;
 import hu.nn.util.DateUtil;
 import hu.nn.util.NumberUtil;
 import hu.nn.util.Util;
@@ -56,6 +57,34 @@ public class OutPayHeaderMapper {
         }
     }
 
+    public static OutPayHeaderDTO updateDTO(final OutPayHeaderDTO dto, final String[] csvRow) {
+        if (Util.isNotEmpty(dto) && Util.isNotEmpty(csvRow)) {
+            int i = 0;
+            dto.setClntnum(CsvUtil.getElement(csvRow, i++));
+            dto.setChdrnum(CsvUtil.getElement(csvRow, i++));
+            dto.setLetterType(CsvUtil.getElement(csvRow, i++));
+            dto.setPrintDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i++)));
+            dto.setDataId(CsvUtil.getElement(csvRow, i++));
+            dto.setClntName(CsvUtil.getElement(csvRow, i++));
+            dto.setClntAddress(CsvUtil.getElement(csvRow, i++));
+            dto.setRegDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i++)));
+            dto.setBenPercent(NumberUtil.parseNumber(CsvUtil.getElement(csvRow, i++), BigDecimal.class));
+            dto.setRole1(CsvUtil.getElement(csvRow, i++));
+            dto.setRole2(CsvUtil.getElement(csvRow, i++));
+            dto.setCownNum(CsvUtil.getElement(csvRow, i++));
+            dto.setCownName(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice01(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice02(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice03(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice04(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice05(CsvUtil.getElement(csvRow, i++));
+            dto.setNotice06(CsvUtil.getElement(csvRow, i++));
+            dto.setClaimId(CsvUtil.getElement(csvRow, i++));
+            dto.setTp2processDate(DateUtil.parseDate(CsvUtil.getElement(csvRow, i)));
+        }
+        return dto;
+    }
+
     public static OutPayHeader updateEntity(final OutPayHeader entity, final OutPayHeaderDTO dto) {
         if (Util.isNotEmpty(dto) && Util.isNotEmpty(entity)) {
             entity.setOutpayHeaderId(dto.getOutpayHeaderId());
@@ -82,38 +111,6 @@ public class OutPayHeaderMapper {
             entity.setTp2processDate(dto.getTp2processDate());
         }
         return entity;
-    }
-
-    public static OutPayHeaderDTO updateDTO(final OutPayHeaderDTO dto, final String[] csvRow) {
-        if (Util.isNotEmpty(dto) && Util.isNotEmpty(csvRow)) {
-            int i = 0;
-            dto.setClntnum(getElement(csvRow, i++));
-            dto.setChdrnum(getElement(csvRow, i++));
-            dto.setLetterType(getElement(csvRow, i++));
-            dto.setPrintDate(DateUtil.parseDate(getElement(csvRow, i++)));
-            dto.setDataId(getElement(csvRow, i++));
-            dto.setClntName(getElement(csvRow, i++));
-            dto.setClntAddress(getElement(csvRow, i++));
-            dto.setRegDate(DateUtil.parseDate(getElement(csvRow, i++)));
-            dto.setBenPercent(NumberUtil.parseNumber(getElement(csvRow, i++), BigDecimal.class));
-            dto.setRole1(getElement(csvRow, i++));
-            dto.setRole2(getElement(csvRow, i++));
-            dto.setCownNum(getElement(csvRow, i++));
-            dto.setCownName(getElement(csvRow, i++));
-            dto.setNotice01(getElement(csvRow, i++));
-            dto.setNotice02(getElement(csvRow, i++));
-            dto.setNotice03(getElement(csvRow, i++));
-            dto.setNotice04(getElement(csvRow, i++));
-            dto.setNotice05(getElement(csvRow, i++));
-            dto.setNotice06(getElement(csvRow, i++));
-            dto.setClaimId(getElement(csvRow, i++));
-            dto.setTp2processDate(DateUtil.parseDate(getElement(csvRow, i)));
-        }
-        return dto;
-    }
-
-    private static String getElement(final String[] csvRow, int index) {
-        return csvRow.length > index + 1 ? csvRow[index] : null;
     }
 
     public static List<OutPayHeaderDTO> mapEntitiesIntoDTOs(final List<OutPayHeader> entities) {

@@ -35,8 +35,11 @@ import com.opencsv.CSVReaderBuilder;
 
 import hu.nn.constant.CSVConstant;
 import hu.nn.dto.OutPayHeaderDTO;
+import hu.nn.dto.PolicyDTO;
 import hu.nn.mapper.OutPayHeaderMapper;
+import hu.nn.mapper.PolicyMapper;
 import hu.nn.service.OutPayHeaderService;
+import hu.nn.service.PolicyService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,13 +49,19 @@ public class ImportController {
     @Autowired
     private OutPayHeaderService outPayHeaderService;
 
+    @Autowired
+    private PolicyService policyService;
+
     private static final String IMPORT_DIR = "./uploads/";
     private static final String REDIRECT = "redirect:/";
     private static final String SUCCESS = "success";
     private static final String WARNING = "warning";
     private static final String DANGER = "danger";
+    private static final String IMPORT_FAILED = "Import failed: ";
 
     private RedirectAttributes redirectAttributes;
+
+    private String cleanedOriginalFileName;
 
     @GetMapping("/")
     public String homepage() {
@@ -73,7 +82,7 @@ public class ImportController {
 
         if (fileProcessEnabled && originalFileName != null) {
             try {
-                String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
+                cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
                 path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 Charset detectedCharset = detectCharset(path);
@@ -83,7 +92,7 @@ public class ImportController {
                 addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
             } catch (Exception e) {
                 log.error("Error in uploadFile during file processing: {}", e);
-                addErrorMessage("Import failed: " + e);
+                addErrorMessage(IMPORT_FAILED + e);
             }
         }
 
@@ -91,10 +100,12 @@ public class ImportController {
     }
 
     private void addSuccessMessage(String message) {
+        log.info("addSuccessMessage called. message: {}", message);
         redirectAttributes.addFlashAttribute(SUCCESS, message);
     }
 
     private void addErrorMessage(String message) {
+        log.info("addErrorMessage called. message: {}", message);
         redirectAttributes.addFlashAttribute(DANGER, message);
     }
 
@@ -117,6 +128,7 @@ public class ImportController {
     }
 
     private void addWarningMessage(String message) {
+        log.info("addWarningMessage called. message: {}", message);
         redirectAttributes.addFlashAttribute(WARNING, message);
     }
 
@@ -189,6 +201,9 @@ public class ImportController {
         case CSVConstant.SEPARATOR_SEMICOLON:
             processFileForOutPayHeader(path, charset);
             break;
+        case CSVConstant.SEPARATOR_PIPE:
+            processFileForPolicy(path, charset);
+            break;
         default:
             break;
         }
@@ -209,23 +224,65 @@ public class ImportController {
                     sb.append("\n");
                 }
             }
-            if (!sb.isEmpty()) {
-                sb.deleteCharAt(sb.length() - 1);
-                redirectAttributes.addFlashAttribute("unsavedRowsContent", sb.toString());
-            }
+            showUnsavedRowsContent(sb);
         } catch (Exception e) {
             log.error("Error in processFileForOutPayHeader: {}", e);
-            addErrorMessage("Import failed: " + e);
+            addErrorMessage(IMPORT_FAILED + e);
+        }
+    }
+
+    private void showUnsavedRowsContent(StringBuilder sb) {
+        log.info("showUnsavedRowsContent called. sb: {}", sb);
+        if (!sb.isEmpty()) {
+            sb.deleteCharAt(sb.length() - 1);
+            String unsavedRowsContent = sb.toString();
+            log.warn("Unsaved rows. unsavedRowsContent: {}", unsavedRowsContent);
+            redirectAttributes.addFlashAttribute("unsavedRowsContent", unsavedRowsContent);
         }
     }
 
     private boolean saveOutPayHeader(OutPayHeaderDTO dto) {
+        log.info("saveOutPayHeader called. dto: {}", dto);
         boolean saved = true;
         try {
             outPayHeaderService.save(dto);
         } catch (Exception e) {
             saved = false;
             log.error("Error in saveOutPayHeader: {}", e);
+        }
+        return saved;
+    }
+
+    private void processFileForPolicy(Path path, Charset charset) {
+        log.info("processFileForPolicy called. path: {}, charset: {}", path, charset);
+        List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_PIPE.charAt(0));
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (String[] csvRow : csvRows) {
+                PolicyDTO dto = new PolicyDTO();
+                PolicyMapper.updateDTO(dto, csvRow);
+                log.info("After csvRow to dto mapping. dto: {}", dto);
+                boolean saved = savePolicy(dto);
+                if (!saved) {
+                    sb.append(StringUtils.arrayToDelimitedString(csvRow, CSVConstant.SEPARATOR_PIPE));
+                    sb.append("\n");
+                }
+            }
+            showUnsavedRowsContent(sb);
+        } catch (Exception e) {
+            log.error("Error in processFileForPolicy: {}", e);
+            addErrorMessage(IMPORT_FAILED + e);
+        }
+    }
+
+    private boolean savePolicy(PolicyDTO dto) {
+        log.info("savePolicy called. dto: {}", dto);
+        boolean saved = true;
+        try {
+            policyService.save(dto);
+        } catch (Exception e) {
+            saved = false;
+            log.error("Error in savePolicy: {}", e);
         }
         return saved;
     }
