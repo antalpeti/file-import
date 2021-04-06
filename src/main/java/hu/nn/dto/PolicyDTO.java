@@ -29,4 +29,6 @@ public class PolicyDTO implements Serializable {
     private String agntnum;
     private String mailAddress;
 
+    private String causeOfSaveFailure;
+
 }

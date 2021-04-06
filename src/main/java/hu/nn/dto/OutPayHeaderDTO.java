@@ -44,4 +44,6 @@ public class OutPayHeaderDTO implements Serializable {
     private String claimId;
     private Date tp2processDate;
 
+    private String causeOfSaveFailure;
+
 }

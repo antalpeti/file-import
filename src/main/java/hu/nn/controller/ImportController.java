@@ -225,31 +225,39 @@ public class ImportController {
         log.info("processFileForOutPayHeader called. path: {}, charset: {}", path, charset);
         List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
         try {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder unsavedRows = new StringBuilder();
+            StringBuilder causesOfSaveFailure = new StringBuilder();
             for (String[] csvRow : csvRows) {
                 OutPayHeaderDTO dto = new OutPayHeaderDTO();
                 OutPayHeaderMapper.updateDTO(dto, csvRow);
                 log.info("After csvRow to dto mapping. dto: {}", dto);
                 boolean saved = saveOutPayHeader(dto);
                 if (!saved) {
-                    sb.append(StringUtils.arrayToDelimitedString(csvRow, CSVConstant.SEPARATOR_SEMICOLON));
-                    sb.append("\n");
+                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_SEMICOLON);
                 }
             }
-            showUnsavedRowsContent(sb);
+            showContent("unsavedRowsContent", unsavedRows);
+            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForOutPayHeader: {}", e);
             addErrorMessage(IMPORT_FAILED + e);
         }
     }
 
-    private void showUnsavedRowsContent(StringBuilder sb) {
-        log.info("showUnsavedRowsContent called. sb: {}", sb);
+    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, String separator) {
+        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator));
+        unsavedRows.append("\n");
+        causesOfSaveFailure.append(causeOfSaveFailure);
+        causesOfSaveFailure.append("\n");
+    }
+
+    private void showContent(String attributeName, StringBuilder sb) {
+        log.info("showContent called. sb: {}", sb);
         if (!sb.isEmpty()) {
             sb.deleteCharAt(sb.length() - 1);
-            String unsavedRowsContent = sb.toString();
-            log.warn("Unsaved rows. unsavedRowsContent: {}", unsavedRowsContent);
-            redirectAttributes.addFlashAttribute("unsavedRowsContent", unsavedRowsContent);
+            String content = sb.toString();
+            log.warn("Unsaved rows. content: {}", content);
+            redirectAttributes.addFlashAttribute(attributeName, content);
         }
     }
 
@@ -269,18 +277,19 @@ public class ImportController {
         log.info("processFileForPolicy called. path: {}, charset: {}", path, charset);
         List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_PIPE.charAt(0));
         try {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder unsavedRows = new StringBuilder();
+            StringBuilder causesOfSaveFailure = new StringBuilder();
             for (String[] csvRow : csvRows) {
                 PolicyDTO dto = new PolicyDTO();
                 PolicyMapper.updateDTO(dto, csvRow);
                 log.info("After csvRow to dto mapping. dto: {}", dto);
                 boolean saved = savePolicy(dto);
                 if (!saved) {
-                    sb.append(StringUtils.arrayToDelimitedString(csvRow, CSVConstant.SEPARATOR_PIPE));
-                    sb.append("\n");
+                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_PIPE);
                 }
             }
-            showUnsavedRowsContent(sb);
+            showContent("unsavedRowsContent", unsavedRows);
+            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForPolicy: {}", e);
             addErrorMessage(IMPORT_FAILED + e);
@@ -303,18 +312,19 @@ public class ImportController {
         log.info("processFileForSurValues called. path: {}, charset: {}", path, charset);
         List<String[]> rows = processFileWithStringUtilAndCSVUtil(path, charset);
         try {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder unsavedRows = new StringBuilder();
+            StringBuilder causesOfSaveFailure = new StringBuilder();
             for (String[] row : rows) {
                 SurValuesDTO dto = new SurValuesDTO();
                 SurValuesMapper.updateDTO(dto, row);
                 log.info("After row to dto mapping. dto: {}", dto);
                 boolean saved = saveSurValues(dto);
                 if (!saved) {
-                    sb.append(StringUtils.arrayToDelimitedString(row, ""));
-                    sb.append("\n");
+                    appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), "");
                 }
             }
-            showUnsavedRowsContent(sb);
+            showContent("unsavedRowsContent", unsavedRows);
+            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForSurValues: {}", e);
             addErrorMessage(IMPORT_FAILED + e);

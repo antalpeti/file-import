@@ -23,9 +23,16 @@
 					</form>
 					<br/>
 					<div th:if="${!#strings.isEmpty(unsavedRowsContent)}">
-						<h3 class="text-danger">Rows that cannot be saved</h3>
+						<h3 class="text-danger">Row(s) that cannot be saved</h3>
 						<div>
 							<textarea class="form-control" rows="10" style="margin-top: 10px;" placeholder="" name="notes" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
+						</div>
+					</div>
+					<br/>
+					<div th:if="${!#strings.isEmpty(causesOfSaveFailureContent)}">
+						<h3 class="text-warning">Cause(s) of save failure</h3>
+						<div>
+							<textarea class="form-control" rows="10" style="margin-top: 10px;" placeholder="" name="notes" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
 						</div>
 					</div>
 				</div>

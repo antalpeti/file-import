@@ -39,6 +39,7 @@ public class PolicyService {
                 saved = true;
             } catch (Exception e) {
                 log.error("Error in save: {}", e);
+                dto.setCauseOfSaveFailure(e.getMessage());
             }
         }
         return saved;

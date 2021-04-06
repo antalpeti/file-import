@@ -27,4 +27,6 @@ public class SurValuesDTO implements Serializable {
     private String currency;
     private String validDate;
 
+    private String causeOfSaveFailure;
+
 }
