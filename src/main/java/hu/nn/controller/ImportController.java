@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -254,8 +255,11 @@ public class ImportController {
         try {
             outPayHeaderService.save(dto);
         } catch (Exception e) {
-            saved = false;
             log.error("Error in saveOutPayHeader: {}", e);
+            saved = false;
+            if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
+                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+            }
         }
         return saved;
     }
@@ -289,8 +293,11 @@ public class ImportController {
         try {
             policyService.save(dto);
         } catch (Exception e) {
-            saved = false;
             log.error("Error in savePolicy: {}", e);
+            saved = false;
+            if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
+                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+            }
         }
         return saved;
     }
@@ -349,8 +356,11 @@ public class ImportController {
         try {
             surValuesService.save(dto);
         } catch (Exception e) {
-            saved = false;
             log.error("Error in saveSurValues: {}", e);
+            saved = false;
+            if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
+                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+            }
         }
         return saved;
     }

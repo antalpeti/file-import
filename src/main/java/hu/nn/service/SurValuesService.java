@@ -2,6 +2,7 @@ package hu.nn.service;
 
 import java.util.List;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -35,11 +36,11 @@ public class SurValuesService {
         boolean saved = false;
         if (dto != null) {
             try {
-                surValuesRepository.save(SurValuesMapper.createFrom(dto));
+                surValuesRepository.saveAndFlush(SurValuesMapper.createFrom(dto));
                 saved = true;
             } catch (Exception e) {
                 log.error("Error in save: {}", e);
-                dto.setCauseOfSaveFailure(e.getMessage());
+                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
             }
         }
         return saved;
