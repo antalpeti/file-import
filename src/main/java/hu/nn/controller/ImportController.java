@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.google.common.base.Splitter;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -67,6 +65,9 @@ public class ImportController {
     private static final String SUCCESS = "success";
     private static final String WARNING = "warning";
     private static final String DANGER = "danger";
+    private static final String UNSAVED_ROWS_CONTENT = "unsavedRowsContent";
+    private static final String CAUSES_OF_SAVE_FAILURE_CONTENT = "causesOfSaveFailureContent";
+
     private static final String IMPORT_FAILED = "Import failed: ";
 
     private RedirectAttributes redirectAttributes;
@@ -171,20 +172,6 @@ public class ImportController {
         return separator;
     }
 
-    private void processFileWithSplitter(Path path, Charset charset, String separator) {
-        log.info("processFileWithSplitter called. path: {}, charset: {}, separator: {}", path, charset, separator);
-        try (Scanner sc = new Scanner(Files.newInputStream(path), charset)) {
-            while (sc.hasNext()) {
-                String line = sc.nextLine();
-                log.info("nextLine: {}", line);
-                List<String> splitedLine = Splitter.on(separator).splitToList(line);
-                log.info("splitedLine: {}", splitedLine);
-            }
-        } catch (Exception e) {
-            log.error("Error in processFileWithSplitter: {}", e);
-        }
-    }
-
     private List<String[]> processFileWithCSVReader(Path path, Charset charset, char separator) {
         log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {}", path, charset, separator);
         List<String[]> csvRows = new ArrayList<>();
@@ -236,8 +223,8 @@ public class ImportController {
                     appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_SEMICOLON);
                 }
             }
-            showContent("unsavedRowsContent", unsavedRows);
-            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
+            showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
+            showContent(CAUSES_OF_SAVE_FAILURE_CONTENT, causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForOutPayHeader: {}", e);
             addErrorMessage(IMPORT_FAILED + e);
@@ -288,8 +275,8 @@ public class ImportController {
                     appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_PIPE);
                 }
             }
-            showContent("unsavedRowsContent", unsavedRows);
-            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
+            showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
+            showContent(CAUSES_OF_SAVE_FAILURE_CONTENT, causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForPolicy: {}", e);
             addErrorMessage(IMPORT_FAILED + e);
@@ -323,8 +310,8 @@ public class ImportController {
                     appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), "");
                 }
             }
-            showContent("unsavedRowsContent", unsavedRows);
-            showContent("causesOfSaveFailureContent", causesOfSaveFailure);
+            showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
+            showContent(CAUSES_OF_SAVE_FAILURE_CONTENT, causesOfSaveFailure);
         } catch (Exception e) {
             log.error("Error in processFileForSurValues: {}", e);
             addErrorMessage(IMPORT_FAILED + e);
