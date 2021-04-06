@@ -21,9 +21,9 @@ public class SurValuesDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer id;
+    private String company;
     private String chdrnum;
     private BigDecimal survalue;
-    private String company;
     private String currency;
     private String validDate;
 

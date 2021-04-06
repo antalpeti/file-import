@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class DateUtil {
 
-    private static final String DATE_PATTERN_8_HU = "yyyyMMdd";
+    public static final String DATE_PATTERN_8_HU = "yyyyMMdd";
+    public static final String DATE_PATTERN_10_HU_HYPHEN = "yyyy-MM-dd";
+
     private static final String[] DATE_PATTERNS = { DATE_PATTERN_8_HU };
 
     public static Date parseDate(String value) {

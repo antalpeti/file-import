@@ -11,8 +11,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.MediaType;
 
@@ -36,11 +39,16 @@ import com.opencsv.CSVReaderBuilder;
 import hu.nn.constant.CSVConstant;
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.dto.PolicyDTO;
+import hu.nn.dto.SurValuesDTO;
 import hu.nn.mapper.OutPayHeaderMapper;
 import hu.nn.mapper.PolicyMapper;
+import hu.nn.mapper.SurValuesMapper;
 import hu.nn.service.OutPayHeaderService;
 import hu.nn.service.PolicyService;
+import hu.nn.service.SurValuesService;
 import hu.nn.util.CSVUtil;
+import hu.nn.util.StringUtil;
+import hu.nn.util.Util;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,9 +57,10 @@ public class ImportController {
 
     @Autowired
     private OutPayHeaderService outPayHeaderService;
-
     @Autowired
     private PolicyService policyService;
+    @Autowired
+    private SurValuesService surValuesService;
 
     private static final String IMPORT_DIR = "./uploads/";
     private static final String REDIRECT = "redirect:/";
@@ -207,6 +216,7 @@ public class ImportController {
             processFileForPolicy(path, charset);
             break;
         default:
+            processFileForSurValues(path, charset);
             break;
         }
     }
@@ -285,6 +295,65 @@ public class ImportController {
         } catch (Exception e) {
             saved = false;
             log.error("Error in savePolicy: {}", e);
+        }
+        return saved;
+    }
+
+    private void processFileForSurValues(Path path, Charset charset) {
+        log.info("processFileForSurValues called. path: {}, charset: {}", path, charset);
+        List<String[]> rows = processFileWithStringUtilAndCSVUtil(path, charset);
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (String[] row : rows) {
+                SurValuesDTO dto = new SurValuesDTO();
+                SurValuesMapper.updateDTO(dto, row);
+                log.info("After row to dto mapping. dto: {}", dto);
+                boolean saved = saveSurValues(dto);
+                if (!saved) {
+                    sb.append(StringUtils.arrayToDelimitedString(row, ""));
+                    sb.append("\n");
+                }
+            }
+            showUnsavedRowsContent(sb);
+        } catch (Exception e) {
+            log.error("Error in processFileForSurValues: {}", e);
+            addErrorMessage(IMPORT_FAILED + e);
+        }
+    }
+
+    private List<String[]> processFileWithStringUtilAndCSVUtil(Path path, Charset charset) {
+        log.info("processFileWithStringUtilAndCSVUtil called. path: {}, charset: {}", path, charset);
+        try (Stream<String> lines = Files.lines(path, charset)) {
+            return lines.map(this::processLine).filter(CSVUtil::isNotEmpty).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error in processFileWithStringUtilAndCSVUtil: {}", e);
+        }
+        return Collections.emptyList();
+    }
+
+    private String[] processLine(String line) {
+        log.info("processLine called. line: {}", line);
+        if (Util.isEmpty(line)) {
+            return new String[0];
+        }
+        String[] row = new String[6];
+        row[0] = StringUtil.getSubstring(line, 0, 1);
+        row[1] = StringUtil.getSubstring(line, 1, 8);
+        row[2] = StringUtil.getSubstring(line, 9, 15);
+        row[3] = StringUtil.getSubstring(line, 24, 10);
+        row[4] = StringUtil.getSubstring(line, 34, 10);
+        row[5] = StringUtil.getSubstring(line, 44, 26);
+        return row;
+    }
+
+    private boolean saveSurValues(SurValuesDTO dto) {
+        log.info("saveSurValues called. dto: {}", dto);
+        boolean saved = true;
+        try {
+            surValuesService.save(dto);
+        } catch (Exception e) {
+            saved = false;
+            log.error("Error in saveSurValues: {}", e);
         }
         return saved;
     }

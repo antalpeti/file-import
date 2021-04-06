@@ -19,6 +19,7 @@ public class Util {
     }
 
     public static boolean isNotEmpty(Object obj) {
+        log.info("isNotEmpty called.");
         return !isEmpty(obj);
     }
 

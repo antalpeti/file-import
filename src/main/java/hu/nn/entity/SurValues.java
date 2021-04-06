@@ -38,12 +38,12 @@ public class SurValues implements Serializable {
     @GeneratedValue
     @Column(name = "ID", columnDefinition = "int", unique = true, nullable = false)
     private Integer id;
+    @Column(name = "Company", columnDefinition = "char(1)", nullable = false)
+    private String company;
     @Column(name = "Chdrnum", columnDefinition = "char(8)", nullable = false)
     private String chdrnum;
     @Column(name = "Survalue", columnDefinition = "decimal(15, 2)", nullable = false)
     private BigDecimal survalue;
-    @Column(name = "Company", columnDefinition = "char(1)", nullable = false)
-    private String company;
     @Column(name = "Currency", columnDefinition = "char(3)", nullable = true)
     private String currency;
     @Column(name = "ValidDate", columnDefinition = "char(10)", nullable = true)

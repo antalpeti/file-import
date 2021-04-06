@@ -11,7 +11,7 @@ public class CSVUtil {
 
     public static String getElement(final String[] csvRow, int index) {
         log.info("getElement called. csvRow: {}, index: {}", csvRow, index);
-        if (csvRow.length > index + 1) {
+        if (csvRow.length > index) {
             String csvColumn = csvRow[index];
             return Util.isNotEmpty(csvColumn) ? csvColumn.trim() : null;
         }
@@ -30,6 +30,11 @@ public class CSVUtil {
             }
         }
         return empty;
+    }
+
+    public static boolean isNotEmpty(final String[] csvRow) {
+        log.info("isNotEmpty called.");
+        return !CSVUtil.isEmpty(csvRow);
     }
 
 }

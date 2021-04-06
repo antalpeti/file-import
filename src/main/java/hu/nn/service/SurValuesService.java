@@ -11,7 +11,9 @@ import hu.nn.dto.SurValuesDTO;
 import hu.nn.entity.SurValues;
 import hu.nn.mapper.SurValuesMapper;
 import hu.nn.repository.SurValuesRepository;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
 public class SurValuesService {
@@ -28,4 +30,17 @@ public class SurValuesService {
         return SurValuesMapper.mapEntitiesIntoDTOs(entities);
     }
 
+    @Transactional
+    public boolean save(SurValuesDTO dto) {
+        boolean saved = false;
+        if (dto != null) {
+            try {
+                surValuesRepository.save(SurValuesMapper.createFrom(dto));
+                saved = true;
+            } catch (Exception e) {
+                log.error("Error in save: {}", e);
+            }
+        }
+        return saved;
+    }
 }
