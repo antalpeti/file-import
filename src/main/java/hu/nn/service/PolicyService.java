@@ -22,10 +22,6 @@ public class PolicyService {
     @Autowired
     private PolicyRepository policyRepository;
 
-    public PolicyDTO getById(Integer id) {
-        return PolicyMapper.createFrom(policyRepository.getById(id));
-    }
-
     public List<PolicyDTO> findAll() {
         List<Policy> entities = policyRepository.findAll();
         return PolicyMapper.mapEntitiesIntoDTOs(entities);

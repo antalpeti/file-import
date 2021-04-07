@@ -22,10 +22,6 @@ public class SurValuesService {
     @Autowired
     private SurValuesRepository surValuesRepository;
 
-    public SurValuesDTO getById(Integer id) {
-        return SurValuesMapper.createFrom(surValuesRepository.getById(id));
-    }
-
     public List<SurValuesDTO> findAll() {
         List<SurValues> entities = surValuesRepository.findAll();
         return SurValuesMapper.mapEntitiesIntoDTOs(entities);
