@@ -24,11 +24,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -54,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
+@ControllerAdvice
 public class ImportController {
 
     @Autowired
@@ -62,6 +67,9 @@ public class ImportController {
     private PolicyService policyService;
     @Autowired
     private SurValuesService surValuesService;
+
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private String maxFileSize;
 
     private static final String IMPORT_DIR = "./uploads/";
     private static final String REDIRECT = "redirect:/";
@@ -79,6 +87,19 @@ public class ImportController {
     @GetMapping("/")
     public String homepage() {
         return "index";
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public String handleFileUploadError(RedirectAttributes attributes) {
+        log.info("handleFileUploadError called.");
+        redirectAttributes = attributes;
+        addErrorMessage("You could not upload file bigger than " + maxFileSize);
+        return REDIRECT;
+    }
+
+    private void addErrorMessage(String message) {
+        log.info("addErrorMessage called. message: {}", message);
+        redirectAttributes.addFlashAttribute(DANGER, message);
     }
 
     @PostMapping("/upload")
@@ -115,11 +136,6 @@ public class ImportController {
     private void addSuccessMessage(String message) {
         log.info("addSuccessMessage called. message: {}", message);
         redirectAttributes.addFlashAttribute(SUCCESS, message);
-    }
-
-    private void addErrorMessage(String message) {
-        log.info("addErrorMessage called. message: {}", message);
-        redirectAttributes.addFlashAttribute(DANGER, message);
     }
 
     private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType, boolean fileProcessEnabled) {
