@@ -11,10 +11,6 @@
 			<div class="row">
 				<div class="col-md-8 mx-auto">
 					<h2>Select file for import</h2>
-					<p th:text="${message}" th:if="${message ne null}" class="alert alert-primary"></p>
-					<p th:text="${warning}" th:if="${warning ne null}" class="alert alert-warning"></p>
-					<p th:text="${success}" th:if="${success ne null}" class="alert alert-success"></p>
-					<p th:text="${danger}" th:if="${danger ne null}" class="alert alert-danger"></p>
 					<form method="post" th:action="@{/upload}" enctype="multipart/form-data">
 						<div class="form-group">
 							<input type="file" name="file" class="form-control-file">
@@ -22,6 +18,10 @@
 						<button type="submit" class="btn btn-primary">Import</button>
 					</form>
 					<br/>
+					<p th:text="${message}" th:if="${message ne null}" class="alert alert-primary"></p>
+					<p th:text="${warning}" th:if="${warning ne null}" class="alert alert-warning"></p>
+					<p th:text="${success}" th:if="${success ne null}" class="alert alert-success"></p>
+					<p th:text="${danger}" th:if="${danger ne null}" class="alert alert-danger"></p>
 					<div th:if="${!#strings.isEmpty(unsavedRowsContent)}">
 						<h3 class="text-danger">Row(s) that cannot be saved</h3>
 						<div>
