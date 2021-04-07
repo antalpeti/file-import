@@ -13,11 +13,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
@@ -120,6 +122,7 @@ public class ImportController {
     }
 
     private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType, boolean fileProcessEnabled) {
+        Set<String> allowedExtensions = Set.of("csv", "txt");
         if (!Files.exists(path)) {
             String pathAsString = path.toString();
             log.warn("Missing directory. pathAsString: {}", pathAsString);
@@ -129,7 +132,7 @@ public class ImportController {
             log.warn("Empty file. originalFileName: {}", originalFileName);
             addWarningMessage("Empty file: " + originalFileName);
             fileProcessEnabled = false;
-        } else if (!MediaType.TEXT_PLAIN.equals(contentType)) {
+        } else if (!MediaType.TEXT_PLAIN.equals(contentType) && !allowedExtensions.contains(FileNameUtils.getExtension(originalFileName).toLowerCase())) {
             log.warn("Not plain text file. contentType: {}", contentType);
             fileProcessEnabled = false;
             addWarningMessage("Not plain text file: " + contentType);
