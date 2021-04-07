@@ -21,6 +21,7 @@ public class OutPayHeaderDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @EqualsAndHashCode.Exclude
     private Integer outpayHeaderId;
     private String clntnum;
     private String chdrnum;

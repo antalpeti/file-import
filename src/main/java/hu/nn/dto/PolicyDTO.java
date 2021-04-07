@@ -19,6 +19,7 @@ public class PolicyDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @EqualsAndHashCode.Exclude
     private Integer id;
     private String chdrnum;
     private String cownnum;

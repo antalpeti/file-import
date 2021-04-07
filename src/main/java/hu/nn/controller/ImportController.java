@@ -72,6 +72,7 @@ public class ImportController {
     private static final String CAUSES_OF_SAVE_FAILURE_CONTENT = "causesOfSaveFailureContent";
 
     private static final String IMPORT_FAILED = "Import failed: ";
+    private static final String ROW_HAS_ALREADY_STORED = "Row has already stored.";
 
     private RedirectAttributes redirectAttributes;
 
@@ -122,6 +123,7 @@ public class ImportController {
     }
 
     private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType, boolean fileProcessEnabled) {
+        log.info("isValidFile called. file: {}, path: {}, originalFileName: {}, contentType: {}", file, path, originalFileName, contentType);
         Set<String> allowedExtensions = Set.of("csv", "txt");
         if (!Files.exists(path)) {
             String pathAsString = path.toString();
@@ -218,11 +220,17 @@ public class ImportController {
         try {
             StringBuilder unsavedRows = new StringBuilder();
             StringBuilder causesOfSaveFailure = new StringBuilder();
+            List<OutPayHeaderDTO> rowsInDB = outPayHeaderService.findAll();
             for (String[] csvRow : csvRows) {
                 OutPayHeaderDTO dto = new OutPayHeaderDTO();
                 OutPayHeaderMapper.updateDTO(dto, csvRow);
                 log.info("After csvRow to dto mapping. dto: {}", dto);
-                boolean saved = saveOutPayHeader(dto);
+                boolean saved = false;
+                if (rowsInDB.contains(dto)) {
+                    dto.setCauseOfSaveFailure(ROW_HAS_ALREADY_STORED);
+                } else {
+                    saved = saveOutPayHeader(dto);
+                }
                 if (!saved) {
                     appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_SEMICOLON);
                 }
@@ -236,6 +244,7 @@ public class ImportController {
     }
 
     private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, String separator) {
+        log.info("appendData called. csvRow: {}, causeOfSaveFailure: {}, separator: {}", causesOfSaveFailure, csvRow, causeOfSaveFailure);
         unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator));
         unsavedRows.append("\n");
         causesOfSaveFailure.append(causeOfSaveFailure);
@@ -273,11 +282,17 @@ public class ImportController {
         try {
             StringBuilder unsavedRows = new StringBuilder();
             StringBuilder causesOfSaveFailure = new StringBuilder();
+            List<PolicyDTO> rowsInDB = policyService.findAll();
             for (String[] csvRow : csvRows) {
                 PolicyDTO dto = new PolicyDTO();
                 PolicyMapper.updateDTO(dto, csvRow);
                 log.info("After csvRow to dto mapping. dto: {}", dto);
-                boolean saved = savePolicy(dto);
+                boolean saved = false;
+                if (rowsInDB.contains(dto)) {
+                    dto.setCauseOfSaveFailure(ROW_HAS_ALREADY_STORED);
+                } else {
+                    saved = savePolicy(dto);
+                }
                 if (!saved) {
                     appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_PIPE);
                 }
@@ -311,11 +326,17 @@ public class ImportController {
         try {
             StringBuilder unsavedRows = new StringBuilder();
             StringBuilder causesOfSaveFailure = new StringBuilder();
+            List<SurValuesDTO> rowsInDB = surValuesService.findAll();
             for (String[] row : rows) {
                 SurValuesDTO dto = new SurValuesDTO();
                 SurValuesMapper.updateDTO(dto, row);
                 log.info("After row to dto mapping. dto: {}", dto);
-                boolean saved = saveSurValues(dto);
+                boolean saved = false;
+                if (rowsInDB.contains(dto)) {
+                    dto.setCauseOfSaveFailure(ROW_HAS_ALREADY_STORED);
+                } else {
+                    saved = saveSurValues(dto);
+                }
                 if (!saved) {
                     appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), "");
                 }

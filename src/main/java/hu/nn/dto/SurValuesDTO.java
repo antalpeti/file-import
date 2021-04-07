@@ -20,6 +20,7 @@ public class SurValuesDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @EqualsAndHashCode.Exclude
     private Integer id;
     private String company;
     private String chdrnum;
