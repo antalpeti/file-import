@@ -23,7 +23,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "SurValues")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "txt")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "surValuesRegion")
 @DynamicInsert
 @DynamicUpdate
 @Getter

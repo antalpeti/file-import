@@ -22,7 +22,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "POLICY")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "txt")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "policyRegion")
 @DynamicInsert
 @DynamicUpdate
 @Getter

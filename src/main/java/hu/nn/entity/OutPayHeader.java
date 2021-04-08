@@ -24,7 +24,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "OUTPAY_HEADER")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "txt")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "outPayHeaderRegion")
 @DynamicInsert
 @DynamicUpdate
 @Getter
