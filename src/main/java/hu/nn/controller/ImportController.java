@@ -42,6 +42,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import hu.nn.constant.CSVConstant;
+import hu.nn.constant.SurValuesConstant;
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.dto.PolicyDTO;
 import hu.nn.dto.SurValuesDTO;
@@ -75,7 +76,7 @@ public class ImportController {
     private static final String REDIRECT = "redirect:/";
     private static final String SUCCESS = "success";
     private static final String WARNING = "warning";
-    private static final String DANGER = "danger";
+    private static final String ERROR = "error";
     private static final String UNSAVED_ROWS_CONTENT = "unsavedRowsContent";
     private static final String CAUSES_OF_SAVE_FAILURE_CONTENT = "causesOfSaveFailureContent";
 
@@ -99,7 +100,7 @@ public class ImportController {
 
     private void addErrorMessage(String message) {
         log.info("addErrorMessage called. message: {}", message);
-        redirectAttributes.addFlashAttribute(DANGER, message);
+        redirectAttributes.addFlashAttribute(ERROR, message);
     }
 
     @PostMapping("/upload")
@@ -107,13 +108,11 @@ public class ImportController {
         log.info("uploadFile called.");
         redirectAttributes = attributes;
         String userDir = System.getProperty("user.dir");
-        log.info("Located user directory. userDir: {}", userDir);
         Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
         String originalFileName = file.getOriginalFilename();
         String contentType = file.getContentType();
-        boolean fileProcessEnabled = true;
-        fileProcessEnabled = isValidFile(file, path, originalFileName, contentType, fileProcessEnabled);
-
+        log.info("File attributes. userDir: {}, path: {}, originalFileName: {}, contentType: {}", userDir, path, originalFileName, contentType);
+        boolean fileProcessEnabled = isValidFile(file, path, originalFileName, contentType);
         if (fileProcessEnabled && originalFileName != null) {
             try {
                 String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
@@ -122,7 +121,7 @@ public class ImportController {
                 Charset detectedCharset = detectCharset(path);
                 String detectedSeparator = detectSeparator(path, detectedCharset);
                 processFile(path, detectedCharset, detectedSeparator);
-                log.info("Successfull import. originalFileName: {}", cleanedOriginalFileName);
+                log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
                 addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
             } catch (Exception e) {
                 log.error("Error in uploadFile during file processing: {}", e);
@@ -133,14 +132,11 @@ public class ImportController {
         return REDIRECT;
     }
 
-    private void addSuccessMessage(String message) {
-        log.info("addSuccessMessage called. message: {}", message);
-        redirectAttributes.addFlashAttribute(SUCCESS, message);
-    }
-
-    private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType, boolean fileProcessEnabled) {
+    private boolean isValidFile(MultipartFile file, Path path, String originalFileName, String contentType) {
         log.info("isValidFile called. file: {}, path: {}, originalFileName: {}, contentType: {}", file, path, originalFileName, contentType);
         Set<String> allowedExtensions = Set.of("csv", "txt");
+        String extension = FileNameUtils.getExtension(originalFileName);
+        boolean fileProcessEnabled = true;
         if (!Files.exists(path)) {
             String pathAsString = path.toString();
             log.warn("Missing directory. pathAsString: {}", pathAsString);
@@ -150,10 +146,10 @@ public class ImportController {
             log.warn("Empty file. originalFileName: {}", originalFileName);
             addWarningMessage("Empty file: " + originalFileName);
             fileProcessEnabled = false;
-        } else if (!MediaType.TEXT_PLAIN.equals(contentType) && !allowedExtensions.contains(FileNameUtils.getExtension(originalFileName).toLowerCase())) {
-            log.warn("Not plain text file. contentType: {}", contentType);
+        } else if (!MediaType.TEXT_PLAIN.equals(contentType) && !allowedExtensions.contains(extension.toLowerCase())) {
+            log.warn("Not plain text file and not allowed extension. contentType: {}, extension: {}", contentType, extension);
+            addWarningMessage("Not plain text file: " + contentType + ". Not allowed extension" + allowedExtensions + ": " + extension);
             fileProcessEnabled = false;
-            addWarningMessage("Not plain text file: " + contentType);
         }
         return fileProcessEnabled;
     }
@@ -192,27 +188,6 @@ public class ImportController {
         }
         log.info("Detected separator. separator: {}", separator);
         return separator;
-    }
-
-    private List<String[]> processFileWithCSVReader(Path path, Charset charset, char separator) {
-        log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {}", path, charset, separator);
-        List<String[]> csvRows = new ArrayList<>();
-        try {
-            CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
-            BufferedReader br = Files.newBufferedReader(path, charset);
-            CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
-            String[] csvRow = null;
-            while ((csvRow = csvReader.readNext()) != null) {
-                log.info("Processed row. Arrays.asList(csvRow): {}", Arrays.asList(csvRow));
-                if (CSVUtil.isEmpty(csvRow)) {
-                    continue;
-                }
-                csvRows.add(csvRow);
-            }
-        } catch (Exception e) {
-            log.error("Error in processFileWithCSVReader: {}", e);
-        }
-        return csvRows;
     }
 
     private void processFile(Path path, Charset charset, String separator) {
@@ -259,22 +234,25 @@ public class ImportController {
         }
     }
 
-    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, String separator) {
-        log.info("appendData called. csvRow: {}, causeOfSaveFailure: {}, separator: {}", causesOfSaveFailure, csvRow, causeOfSaveFailure);
-        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator));
-        unsavedRows.append("\n");
-        causesOfSaveFailure.append(causeOfSaveFailure);
-        causesOfSaveFailure.append("\n");
-    }
-
-    private void showContent(String attributeName, StringBuilder sb) {
-        log.info("showContent called. sb: {}", sb);
-        if (!sb.isEmpty()) {
-            sb.deleteCharAt(sb.length() - 1);
-            String content = sb.toString();
-            log.warn("Unsaved rows. content: {}", content);
-            redirectAttributes.addFlashAttribute(attributeName, content);
+    private List<String[]> processFileWithCSVReader(Path path, Charset charset, char separator) {
+        log.info("processFileWithCSVReader called. path: {}, charset: {}, separator: {}", path, charset, separator);
+        List<String[]> csvRows = new ArrayList<>();
+        try {
+            CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
+            BufferedReader br = Files.newBufferedReader(path, charset);
+            CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build();
+            String[] csvRow = null;
+            while ((csvRow = csvReader.readNext()) != null) {
+                log.info("Processed row. Arrays.asList(csvRow): {}", Arrays.asList(csvRow));
+                if (CSVUtil.isEmpty(csvRow)) {
+                    continue;
+                }
+                csvRows.add(csvRow);
+            }
+        } catch (Exception e) {
+            log.error("Error in processFileWithCSVReader: {}", e);
         }
+        return csvRows;
     }
 
     private boolean saveOutPayHeader(OutPayHeaderDTO dto) {
@@ -290,6 +268,24 @@ public class ImportController {
             }
         }
         return saved;
+    }
+
+    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, String separator) {
+        log.info("appendData called. csvRow: {}, causeOfSaveFailure: {}, separator: {}", csvRow, causeOfSaveFailure, separator);
+        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator));
+        unsavedRows.append("\n");
+        causesOfSaveFailure.append(causeOfSaveFailure);
+        causesOfSaveFailure.append("\n");
+    }
+
+    private void showContent(String attributeName, StringBuilder sb) {
+        log.info("showContent called. sb: {}", sb);
+        if (!sb.isEmpty()) {
+            sb.deleteCharAt(sb.length() - 1);
+            String content = sb.toString();
+            log.warn("Unsaved rows. content: {}", content);
+            redirectAttributes.addFlashAttribute(attributeName, content);
+        }
     }
 
     private void processFileForPolicy(Path path, Charset charset) {
@@ -381,12 +377,12 @@ public class ImportController {
             return new String[0];
         }
         String[] row = new String[6];
-        row[0] = StringUtil.getSubstring(line, 0, 1);
-        row[1] = StringUtil.getSubstring(line, 1, 8);
-        row[2] = StringUtil.getSubstring(line, 9, 15);
-        row[3] = StringUtil.getSubstring(line, 24, 10);
-        row[4] = StringUtil.getSubstring(line, 34, 10);
-        row[5] = StringUtil.getSubstring(line, 44, 26);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_COMPANY] = StringUtil.getSubstring(line, 0, 1);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_CHDRNUM] = StringUtil.getSubstring(line, 1, 8);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_SURRENDERVALUE] = StringUtil.getSubstring(line, 9, 15);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_USER] = StringUtil.getSubstring(line, 24, 10);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_NAME] = StringUtil.getSubstring(line, 34, 10);
+        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_TIMESTAMP] = StringUtil.getSubstring(line, 44, 26);
         return row;
     }
 
@@ -403,6 +399,11 @@ public class ImportController {
             }
         }
         return saved;
+    }
+
+    private void addSuccessMessage(String message) {
+        log.info("addSuccessMessage called. message: {}", message);
+        redirectAttributes.addFlashAttribute(SUCCESS, message);
     }
 
 }

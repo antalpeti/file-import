@@ -11,4 +11,11 @@ public class SurValuesConstant {
     public static final String CURRENCY_EUR = "EUR";
     public static final String CURRENCY_HUF = "HUF";
 
+    public static final int ROW_ARRAY_INDEX_COMPANY = 0;
+    public static final int ROW_ARRAY_INDEX_CHDRNUM = 1;
+    public static final int ROW_ARRAY_INDEX_SURRENDERVALUE = 2;
+    public static final int ROW_ARRAY_INDEX_JOB_USER = 3;
+    public static final int ROW_ARRAY_INDEX_JOB_NAME = 4;
+    public static final int ROW_ARRAY_INDEX_JOB_TIMESTAMP = 5;
+
 }

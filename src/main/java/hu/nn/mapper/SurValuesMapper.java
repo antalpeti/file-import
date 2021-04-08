@@ -57,7 +57,10 @@ public class SurValuesMapper {
             }
             String element = CSVUtil.getElement(row, row.length - 1);
             if (Util.isNotEmpty(element) && element.length() >= DateUtil.DATE_PATTERN_10_HU_HYPHEN.length()) {
-                dto.setValidDate(element.substring(0, DateUtil.DATE_PATTERN_10_HU_HYPHEN.length()));
+                String dateAsString = element.substring(0, DateUtil.DATE_PATTERN_10_HU_HYPHEN.length());
+                if (DateUtil.parseDate(dateAsString.replaceAll("\\D", "")) != null) {
+                    dto.setValidDate(dateAsString);
+                }
             }
         }
         return dto;

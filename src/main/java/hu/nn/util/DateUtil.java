@@ -24,7 +24,7 @@ public class DateUtil {
 
         Date convertedValue = null;
         try {
-            convertedValue = DateUtils.parseDate(value, DATE_PATTERNS);
+            convertedValue = DateUtils.parseDateStrictly(value, DATE_PATTERNS);
         } catch (Exception e) {
             log.error("Error in parseDate: {}", e);
         }
