@@ -84,6 +84,7 @@ public class ImportController {
     private static final String ROW_HAS_ALREADY_STORED = "Row has already stored.";
 
     private RedirectAttributes redirectAttributes;
+    private static final Object lock = new Object();
 
     @GetMapping("/")
     public String homepage() {
@@ -106,28 +107,32 @@ public class ImportController {
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes attributes) {
         log.info("uploadFile called.");
-        redirectAttributes = attributes;
-        String userDir = System.getProperty("user.dir");
-        Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
-        String originalFileName = file.getOriginalFilename();
-        String contentType = file.getContentType();
-        log.info("File attributes. userDir: {}, path: {}, originalFileName: {}, contentType: {}", userDir, path, originalFileName, contentType);
-        boolean fileProcessEnabled = isValidFile(file, path, originalFileName, contentType);
-        if (fileProcessEnabled && originalFileName != null) {
-            try {
-                String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
-                path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
-                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                Charset detectedCharset = detectCharset(path);
-                String detectedSeparator = detectSeparator(path, detectedCharset);
-                processFile(path, detectedCharset, detectedSeparator);
-                log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
-                addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
-            } catch (Exception e) {
-                log.error("Error in uploadFile during file processing: {}", e);
-                addErrorMessage(IMPORT_FAILED + e);
+        synchronized (lock) {
+            log.info("lock acquired.");
+            redirectAttributes = attributes;
+            String userDir = System.getProperty("user.dir");
+            Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
+            String originalFileName = file.getOriginalFilename();
+            String contentType = file.getContentType();
+            log.info("File attributes. userDir: {}, path: {}, originalFileName: {}, contentType: {}", userDir, path, originalFileName, contentType);
+            boolean fileProcessEnabled = isValidFile(file, path, originalFileName, contentType);
+            if (fileProcessEnabled && originalFileName != null) {
+                try {
+                    String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
+                    path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
+                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                    Charset detectedCharset = detectCharset(path);
+                    String detectedSeparator = detectSeparator(path, detectedCharset);
+                    processFile(path, detectedCharset, detectedSeparator);
+                    log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
+                    addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
+                } catch (Exception e) {
+                    log.error("Error in uploadFile during file processing: {}", e);
+                    addErrorMessage(IMPORT_FAILED + e);
+                }
             }
         }
+        log.info("lock released.");
 
         return REDIRECT;
     }
