@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 <link th:href="@{/css/tln.css}" rel="stylesheet" />
 <script type="text/javascript" th:src="@{/js/tln.js}"></script>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
 <style type="text/css">
 .wrapper {
 	position: relative;
@@ -34,9 +35,6 @@
 						<div class="wrapper">
 							<textarea id="textareaUnsavedRowsContent" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
 						</div>
-						<script>
-							TLN.append_line_numbers('textareaUnsavedRowsContent');
-						</script>
 					</div>
 					<br />
 					<div th:if="${!#strings.isEmpty(causesOfSaveFailureContent)}">
@@ -44,8 +42,12 @@
 						<div class="wrapper">
 							<textarea id="textareaCausesOfSaveFailureContent" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
 						</div>
+					</div>
+					<div th:if="${!#strings.isEmpty(unsavedRowsContent) and !#strings.isEmpty(causesOfSaveFailureContent)}">
 						<script>
+							TLN.append_line_numbers('textareaUnsavedRowsContent');
 							TLN.append_line_numbers('textareaCausesOfSaveFailureContent');
+							UTIL.scroll_two_textarea('textareaUnsavedRowsContent','textareaCausesOfSaveFailureContent')
 						</script>
 					</div>
 				</div>
