@@ -60,6 +60,8 @@ public class SurValuesMapper {
                 String dateAsString = element.substring(0, DateUtil.DATE_PATTERN_10_HU_HYPHEN.length());
                 if (DateUtil.parseDate(dateAsString.replaceAll("\\D", "")) != null) {
                     dto.setValidDate(dateAsString);
+                } else {
+                    dto.setValidDate("*INVALID*");
                 }
             }
         }
