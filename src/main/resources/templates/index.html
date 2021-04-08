@@ -4,15 +4,9 @@
 <title>File Import</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 <link th:href="@{/css/tln.css}" rel="stylesheet" />
+<link th:href="@{/css/custom.css}" rel="stylesheet" />
 <script type="text/javascript" th:src="@{/js/tln.js}"></script>
 <script type="text/javascript" th:src="@{/js/util.js}"></script>
-<style type="text/css">
-.wrapper {
-	position: relative;
-	height: 200px;
-	width: 100%
-}
-</style>
 </head>
 <body>
 	<section class="my-5">
@@ -33,14 +27,14 @@
 					<div th:if="${!#strings.isEmpty(unsavedRowsContent)}">
 						<h3 class="text-danger">Row(s) that cannot be saved</h3>
 						<div class="wrapper">
-							<textarea id="textareaUnsavedRowsContent" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
+							<textarea id="textareaUnsavedRowsContent" class="form-control full-height" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
 						</div>
 					</div>
 					<br />
 					<div th:if="${!#strings.isEmpty(causesOfSaveFailureContent)}">
 						<h3 class="text-warning">Cause(s) of save failure</h3>
 						<div class="wrapper">
-							<textarea id="textareaCausesOfSaveFailureContent" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
+							<textarea id="textareaCausesOfSaveFailureContent" class="form-control full-height" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
 						</div>
 					</div>
 					<div th:if="${!#strings.isEmpty(unsavedRowsContent) and !#strings.isEmpty(causesOfSaveFailureContent)}">
