@@ -3,13 +3,21 @@
 <head>
 <title>File Import</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+<link th:href="@{/css/tln.css}" rel="stylesheet" />
+<script type="text/javascript" th:src="@{/js/tln.js}"></script>
+<style type="text/css">
+.wrapper {
+	position: relative;
+	height: 200px;
+	width: 100%
+}
+</style>
 </head>
 <body>
-
 	<section class="my-5">
 		<div class="container">
 			<div class="row">
-				<div class="col-md-8 mx-auto">
+				<div class="col-md-12 mx-auto">
 					<h2>Select file for import</h2>
 					<form method="post" th:action="@{/upload}" enctype="multipart/form-data">
 						<div class="form-group">
@@ -17,27 +25,32 @@
 						</div>
 						<button type="submit" class="btn btn-primary">Import</button>
 					</form>
-					<br/>
+					<br />
 					<p th:text="${warning}" th:if="${warning ne null}" class="alert alert-warning"></p>
 					<p th:text="${success}" th:if="${success ne null}" class="alert alert-success"></p>
 					<p th:text="${error}" th:if="${error ne null}" class="alert alert-danger"></p>
 					<div th:if="${!#strings.isEmpty(unsavedRowsContent)}">
 						<h3 class="text-danger">Row(s) that cannot be saved</h3>
-						<div>
-							<textarea class="form-control" rows="10" style="margin-top: 10px;" placeholder="" name="notes" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
+						<div class="wrapper">
+							<textarea id="textareaUnsavedRowsContent" th:inline="text" wrap="off" readonly>[[${unsavedRowsContent}]]</textarea>
 						</div>
+						<script>
+							TLN.append_line_numbers('textareaUnsavedRowsContent');
+						</script>
 					</div>
-					<br/>
+					<br />
 					<div th:if="${!#strings.isEmpty(causesOfSaveFailureContent)}">
 						<h3 class="text-warning">Cause(s) of save failure</h3>
-						<div>
-							<textarea class="form-control" rows="10" style="margin-top: 10px;" placeholder="" name="notes" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
+						<div class="wrapper">
+							<textarea id="textareaCausesOfSaveFailureContent" th:inline="text" wrap="off" readonly>[[${causesOfSaveFailureContent}]]</textarea>
 						</div>
+						<script>
+							TLN.append_line_numbers('textareaCausesOfSaveFailureContent');
+						</script>
 					</div>
 				</div>
 			</div>
 		</div>
 	</section>
-
 </body>
 </html>
