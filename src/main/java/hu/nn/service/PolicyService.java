@@ -2,7 +2,6 @@ package hu.nn.service;
 
 import java.util.List;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -12,6 +11,7 @@ import hu.nn.dto.PolicyDTO;
 import hu.nn.entity.Policy;
 import hu.nn.mapper.PolicyMapper;
 import hu.nn.repository.PolicyRepository;
+import hu.nn.util.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,7 +36,7 @@ public class PolicyService {
                 saved = true;
             } catch (Exception e) {
                 log.error("Error in save: {}", e);
-                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
             }
         }
         return saved;

@@ -2,7 +2,6 @@ package hu.nn.service;
 
 import java.util.List;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -12,6 +11,7 @@ import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.entity.OutPayHeader;
 import hu.nn.mapper.OutPayHeaderMapper;
 import hu.nn.repository.OutPayHeaderRepository;
+import hu.nn.util.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,7 +36,7 @@ public class OutPayHeaderService {
                 saved = true;
             } catch (Exception e) {
                 log.error("Error in save: {}", e);
-                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
             }
         }
         return saved;

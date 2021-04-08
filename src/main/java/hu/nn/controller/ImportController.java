@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.compress.utils.FileNameUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.exception.TikaException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +52,7 @@ import hu.nn.service.OutPayHeaderService;
 import hu.nn.service.PolicyService;
 import hu.nn.service.SurValuesService;
 import hu.nn.util.CSVUtil;
+import hu.nn.util.ExceptionUtil;
 import hu.nn.util.StringUtil;
 import hu.nn.util.Util;
 import lombok.extern.slf4j.Slf4j;
@@ -269,7 +269,7 @@ public class ImportController {
             log.error("Error in saveOutPayHeader: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
             }
         }
         return saved;
@@ -331,7 +331,7 @@ public class ImportController {
             log.error("Error in savePolicy: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
             }
         }
         return saved;
@@ -400,7 +400,7 @@ public class ImportController {
             log.error("Error in saveSurValues: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtils.getRootCauseMessage(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
             }
         }
         return saved;
