@@ -41,10 +41,10 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 import hu.nn.constant.CSVConstant;
-import hu.nn.constant.SurValuesConstant;
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.dto.PolicyDTO;
 import hu.nn.dto.SurValuesDTO;
+import hu.nn.enums.SurValuesEnum;
 import hu.nn.mapper.OutPayHeaderMapper;
 import hu.nn.mapper.PolicyMapper;
 import hu.nn.mapper.SurValuesMapper;
@@ -288,7 +288,7 @@ public class ImportController {
         if (!sb.isEmpty()) {
             sb.deleteCharAt(sb.length() - 1);
             String content = sb.toString();
-            log.warn("Unsaved rows. content: {}", content);
+            log.warn(attributeName + " content. content: {}", content);
             redirectAttributes.addFlashAttribute(attributeName, content);
         }
     }
@@ -382,12 +382,9 @@ public class ImportController {
             return new String[0];
         }
         String[] row = new String[6];
-        row[SurValuesConstant.ROW_ARRAY_INDEX_COMPANY] = StringUtil.getSubstring(line, 0, 1);
-        row[SurValuesConstant.ROW_ARRAY_INDEX_CHDRNUM] = StringUtil.getSubstring(line, 1, 8);
-        row[SurValuesConstant.ROW_ARRAY_INDEX_SURRENDERVALUE] = StringUtil.getSubstring(line, 9, 15);
-        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_USER] = StringUtil.getSubstring(line, 24, 10);
-        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_NAME] = StringUtil.getSubstring(line, 34, 10);
-        row[SurValuesConstant.ROW_ARRAY_INDEX_JOB_TIMESTAMP] = StringUtil.getSubstring(line, 44, 26);
+        for (SurValuesEnum surValuesEnum : SurValuesEnum.values()) {
+            row[surValuesEnum.getRowArrayIndex()] = StringUtil.getSubstring(line, surValuesEnum.getLineStartIndex(), surValuesEnum.getLineLength());
+        }
         return row;
     }
 

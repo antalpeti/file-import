@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import hu.nn.constant.SurValuesConstant;
 import hu.nn.dto.SurValuesDTO;
 import hu.nn.entity.SurValues;
+import hu.nn.enums.SurValuesCompanyEnum;
 import hu.nn.util.CSVUtil;
 import hu.nn.util.DateUtil;
 import hu.nn.util.NumberUtil;
@@ -50,10 +50,12 @@ public class SurValuesMapper {
             dto.setCompany(CSVUtil.getElement(row, i++));
             dto.setChdrnum(CSVUtil.getElement(row, i++));
             dto.setSurvalue(NumberUtil.parseNumber(CSVUtil.getElement(row, i), BigDecimal.class));
-            if (SurValuesConstant.COMPANY_EUR.equals(dto.getCompany())) {
-                dto.setCurrency(SurValuesConstant.CURRENCY_EUR);
-            } else if (SurValuesConstant.COMPANY_HUF.equals(dto.getCompany())) {
-                dto.setCurrency(SurValuesConstant.CURRENCY_HUF);
+            char company = dto.getCompany().charAt(0);
+            for (SurValuesCompanyEnum surValuesCompanyEnum : SurValuesCompanyEnum.values()) {
+                if (surValuesCompanyEnum.getCompany() == company) {
+                    dto.setCurrency(surValuesCompanyEnum.getCurrency());
+                    break;
+                }
             }
             String element = CSVUtil.getElement(row, row.length - 1);
             if (Util.isNotEmpty(element) && element.length() >= DateUtil.DATE_PATTERN_10_HU_HYPHEN.length()) {
