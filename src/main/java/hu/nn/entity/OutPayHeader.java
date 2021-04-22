@@ -16,10 +16,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 @Entity
 @Table(name = "OUTPAY_HEADER")
@@ -27,10 +24,7 @@ import lombok.ToString;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "outPayHeaderRegion")
 @DynamicInsert
 @DynamicUpdate
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
+@Data
 public class OutPayHeader implements Serializable {
 
     private static final long serialVersionUID = 1L;
