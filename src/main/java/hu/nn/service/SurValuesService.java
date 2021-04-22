@@ -36,7 +36,7 @@ public class SurValuesService {
                 saved = true;
             } catch (Exception e) {
                 log.error("Error in save: {}", e);
-                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageInOneLine(e));
             }
         }
         return saved;

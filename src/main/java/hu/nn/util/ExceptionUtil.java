@@ -7,10 +7,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ExceptionUtil {
 
-    public static final String LINE_FEED = "\n";
+    public static final String NEWLINE = "\n";
 
-    public static String getRootCauseMessageWithoutLineFeed(final Throwable th) {
-        return ExceptionUtils.getRootCauseMessage(th).replace(LINE_FEED, " ");
+    public static String getRootCauseMessageInOneLine(final Throwable th) {
+        return ExceptionUtils.getRootCauseMessage(th).replace(NEWLINE, " ");
     }
 
 }

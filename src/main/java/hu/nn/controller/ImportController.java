@@ -240,7 +240,8 @@ public class ImportController {
                     saved = saveOutPayHeader(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), SeparatorEnum.SEMICOLON);
+                    unsavedRows.append(getUnsavedRow(csvRow, SeparatorEnum.SEMICOLON));
+                    causesOfSaveFailure.append(appendNewline(dto.getCauseOfSaveFailure()));
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
@@ -281,18 +282,18 @@ public class ImportController {
             log.error("Error in saveOutPayHeader: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageInOneLine(e));
             }
         }
         return saved;
     }
 
-    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, SeparatorEnum separator) {
-        log.info("appendData called. csvRow: {}, causeOfSaveFailure: {}, separator: {}", csvRow, causeOfSaveFailure, separator);
-        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator.getValueAsString()));
-        unsavedRows.append("\n");
-        causesOfSaveFailure.append(causeOfSaveFailure);
-        causesOfSaveFailure.append("\n");
+    private String getUnsavedRow(String[] row, SeparatorEnum separator) {
+        return new StringBuilder(StringUtils.arrayToDelimitedString(row, separator.getValueAsString())).append("\n").toString();
+    }
+
+    private String appendNewline(String value) {
+        return new StringBuilder(value).append("\n").toString();
     }
 
     private void showContent(String attributeName, StringBuilder sb) {
@@ -323,7 +324,8 @@ public class ImportController {
                     saved = savePolicy(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), SeparatorEnum.PIPE);
+                    unsavedRows.append(getUnsavedRow(csvRow, SeparatorEnum.PIPE));
+                    causesOfSaveFailure.append(appendNewline(dto.getCauseOfSaveFailure()));
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
@@ -343,7 +345,7 @@ public class ImportController {
             log.error("Error in savePolicy: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageInOneLine(e));
             }
         }
         return saved;
@@ -367,7 +369,8 @@ public class ImportController {
                     saved = saveSurValues(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), SeparatorEnum.EMPTY);
+                    unsavedRows.append(getUnsavedRow(row, SeparatorEnum.EMPTY));
+                    causesOfSaveFailure.append(appendNewline(dto.getCauseOfSaveFailure()));
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
@@ -409,7 +412,7 @@ public class ImportController {
             log.error("Error in saveSurValues: {}", e);
             saved = false;
             if (Util.isEmpty(dto.getCauseOfSaveFailure())) {
-                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageWithoutLineFeed(e));
+                dto.setCauseOfSaveFailure(ExceptionUtil.getRootCauseMessageInOneLine(e));
             }
         }
         return saved;
