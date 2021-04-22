@@ -40,10 +40,10 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
-import hu.nn.constant.CSVConstant;
 import hu.nn.dto.OutPayHeaderDTO;
 import hu.nn.dto.PolicyDTO;
 import hu.nn.dto.SurValuesDTO;
+import hu.nn.enums.SeparatorEnum;
 import hu.nn.enums.SurValuesEnum;
 import hu.nn.mapper.OutPayHeaderMapper;
 import hu.nn.mapper.PolicyMapper;
@@ -131,7 +131,7 @@ public class ImportController {
                 path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 Charset detectedCharset = detectCharset(path);
-                String detectedSeparator = detectSeparator(path, detectedCharset);
+                SeparatorEnum detectedSeparator = detectSeparator(path, detectedCharset);
                 processFile(path, detectedCharset, detectedSeparator);
                 log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
                 addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
@@ -190,15 +190,15 @@ public class ImportController {
         return charset;
     }
 
-    private String detectSeparator(Path path, Charset charset) {
+    private SeparatorEnum detectSeparator(Path path, Charset charset) {
         log.info("detectSeparator called. path: {}, charset: {}", path, charset);
-        String separator = "";
+        SeparatorEnum separator = SeparatorEnum.EMPTY;
         try {
             String content = Files.readString(path, charset);
-            if (content.contains(CSVConstant.SEPARATOR_SEMICOLON)) {
-                separator = CSVConstant.SEPARATOR_SEMICOLON;
-            } else if (content.contains(CSVConstant.SEPARATOR_PIPE)) {
-                separator = CSVConstant.SEPARATOR_PIPE;
+            if (content.indexOf(SeparatorEnum.SEMICOLON.getValueAsChar()) != -1) {
+                separator = SeparatorEnum.SEMICOLON;
+            } else if (content.indexOf(SeparatorEnum.PIPE.getValueAsChar()) != -1) {
+                separator = SeparatorEnum.PIPE;
             }
         } catch (Exception e) {
             log.error("Error in detectSeparator: {}", e);
@@ -207,13 +207,13 @@ public class ImportController {
         return separator;
     }
 
-    private void processFile(Path path, Charset charset, String separator) {
+    private void processFile(Path path, Charset charset, SeparatorEnum separator) {
         log.info("processFile called. path: {}, charset: {}, separator: {}", path, charset, separator);
         switch (separator) {
-        case CSVConstant.SEPARATOR_SEMICOLON:
+        case SEMICOLON:
             processFileForOutPayHeader(path, charset);
             break;
-        case CSVConstant.SEPARATOR_PIPE:
+        case PIPE:
             processFileForPolicy(path, charset);
             break;
         default:
@@ -224,7 +224,7 @@ public class ImportController {
 
     private void processFileForOutPayHeader(Path path, Charset charset) {
         log.info("processFileForOutPayHeader called. path: {}, charset: {}", path, charset);
-        List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_SEMICOLON.charAt(0));
+        List<String[]> csvRows = processFileWithCSVReader(path, charset, SeparatorEnum.SEMICOLON.getValueAsChar());
         try {
             StringBuilder unsavedRows = new StringBuilder();
             StringBuilder causesOfSaveFailure = new StringBuilder();
@@ -240,7 +240,7 @@ public class ImportController {
                     saved = saveOutPayHeader(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_SEMICOLON);
+                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), SeparatorEnum.SEMICOLON);
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
@@ -287,9 +287,9 @@ public class ImportController {
         return saved;
     }
 
-    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, String separator) {
+    private void appendData(StringBuilder unsavedRows, StringBuilder causesOfSaveFailure, String[] csvRow, String causeOfSaveFailure, SeparatorEnum separator) {
         log.info("appendData called. csvRow: {}, causeOfSaveFailure: {}, separator: {}", csvRow, causeOfSaveFailure, separator);
-        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator));
+        unsavedRows.append(StringUtils.arrayToDelimitedString(csvRow, separator.getValueAsString()));
         unsavedRows.append("\n");
         causesOfSaveFailure.append(causeOfSaveFailure);
         causesOfSaveFailure.append("\n");
@@ -307,7 +307,7 @@ public class ImportController {
 
     private void processFileForPolicy(Path path, Charset charset) {
         log.info("processFileForPolicy called. path: {}, charset: {}", path, charset);
-        List<String[]> csvRows = processFileWithCSVReader(path, charset, CSVConstant.SEPARATOR_PIPE.charAt(0));
+        List<String[]> csvRows = processFileWithCSVReader(path, charset, SeparatorEnum.PIPE.getValueAsChar());
         try {
             StringBuilder unsavedRows = new StringBuilder();
             StringBuilder causesOfSaveFailure = new StringBuilder();
@@ -323,7 +323,7 @@ public class ImportController {
                     saved = savePolicy(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), CSVConstant.SEPARATOR_PIPE);
+                    appendData(unsavedRows, causesOfSaveFailure, csvRow, dto.getCauseOfSaveFailure(), SeparatorEnum.PIPE);
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
@@ -367,7 +367,7 @@ public class ImportController {
                     saved = saveSurValues(dto);
                 }
                 if (!saved) {
-                    appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), "");
+                    appendData(unsavedRows, causesOfSaveFailure, row, dto.getCauseOfSaveFailure(), SeparatorEnum.EMPTY);
                 }
             }
             showContent(UNSAVED_ROWS_CONTENT, unsavedRows);
