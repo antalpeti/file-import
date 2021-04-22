@@ -104,31 +104,43 @@ public class ImportController {
         redirectAttributes.addFlashAttribute(ERROR, message);
     }
 
+    private boolean uploadInProgress;
+
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes attributes) {
         log.info("uploadFile called.");
+        redirectAttributes = attributes;
+        if (uploadInProgress) {
+            log.error("Another user started a file import. uploadInProgress: {}", uploadInProgress);
+            addWarningMessage("Another user started a file import. Try again later.");
+            return REDIRECT;
+        }
         synchronized (lock) {
+            uploadInProgress = true;
             log.info("lock acquired.");
-            redirectAttributes = attributes;
-            String userDir = System.getProperty("user.dir");
-            Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
-            String originalFileName = file.getOriginalFilename();
-            String contentType = file.getContentType();
-            log.info("File attributes. userDir: {}, path: {}, originalFileName: {}, contentType: {}", userDir, path, originalFileName, contentType);
-            boolean fileProcessEnabled = isValidFile(file, path, originalFileName, contentType);
-            if (fileProcessEnabled && originalFileName != null) {
-                try {
-                    String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
-                    path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
-                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                    Charset detectedCharset = detectCharset(path);
-                    String detectedSeparator = detectSeparator(path, detectedCharset);
-                    processFile(path, detectedCharset, detectedSeparator);
-                    log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
-                    addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
-                } catch (Exception e) {
-                    log.error("Error in uploadFile during file processing: {}", e);
-                    addErrorMessage(IMPORT_FAILED + e);
+        }
+        String userDir = System.getProperty("user.dir");
+        Path path = Paths.get(userDir + IMPORT_DIR.substring(1));
+        String originalFileName = file.getOriginalFilename();
+        String contentType = file.getContentType();
+        log.info("File attributes. userDir: {}, path: {}, originalFileName: {}, contentType: {}", userDir, path, originalFileName, contentType);
+        boolean fileProcessEnabled = isValidFile(file, path, originalFileName, contentType);
+        if (fileProcessEnabled && originalFileName != null) {
+            try {
+                String cleanedOriginalFileName = StringUtils.cleanPath(originalFileName);
+                path = Paths.get(IMPORT_DIR + cleanedOriginalFileName);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                Charset detectedCharset = detectCharset(path);
+                String detectedSeparator = detectSeparator(path, detectedCharset);
+                processFile(path, detectedCharset, detectedSeparator);
+                log.info("Successfull import. cleanedOriginalFileName: {}", cleanedOriginalFileName);
+                addSuccessMessage("Import successfull: " + cleanedOriginalFileName);
+            } catch (Exception e) {
+                log.error("Error in uploadFile during file processing: {}", e);
+                addErrorMessage(IMPORT_FAILED + e);
+            } finally {
+                synchronized (lock) {
+                    uploadInProgress = false;
                 }
             }
         }
