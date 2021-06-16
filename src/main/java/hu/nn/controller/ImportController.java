@@ -138,11 +138,10 @@ public class ImportController {
             } catch (Exception e) {
                 log.error("Error in uploadFile during file processing: {}", e);
                 addErrorMessage(IMPORT_FAILED + e);
-            } finally {
-                synchronized (lock) {
-                    uploadInProgress = false;
-                }
             }
+        }
+        synchronized (lock) {
+            uploadInProgress = false;
         }
         log.info("lock released.");
 
@@ -298,7 +297,7 @@ public class ImportController {
 
     private void showContent(String attributeName, StringBuilder sb) {
         log.info("showContent called. sb: {}", sb);
-        if (!sb.isEmpty()) {
+        if (sb.length() == 0) {
             sb.deleteCharAt(sb.length() - 1);
             String content = sb.toString();
             log.warn(attributeName + " content. content: {}", content);
